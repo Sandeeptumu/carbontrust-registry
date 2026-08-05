@@ -1,4 +1,4 @@
-# 📋 Requirements Specification
+#  Requirements Specification
 
 ## Functional Requirements
 
