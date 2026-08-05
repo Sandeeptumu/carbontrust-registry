@@ -31,8 +31,6 @@ The system provides an end-to-end workflow where NGOs can register restoration p
 
 ---
 
-## 🛠 Tech Stack
-
 
 ## ✨ Key Features
 
@@ -44,6 +42,10 @@ The system provides an end-to-end workflow where NGOs can register restoration p
 - Carbon Credit Marketplace
 - Buyer Purchase Management
 - Admin Dashboard
+
+---
+
+## 🛠 Tech Stack
 
 ### Backend
 - Java
