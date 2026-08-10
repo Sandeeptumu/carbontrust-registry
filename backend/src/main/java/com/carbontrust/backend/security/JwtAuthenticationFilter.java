@@ -5,13 +5,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import java.util.Collections;
 import java.io.IOException;
-import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -44,16 +43,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String email = jwtService.extractEmail(token);
             String role = jwtService.extractRole(token);
+            System.out.println("JWT EMAIL: " + email);
+            System.out.println("JWT ROLE: " + role);
 
             if (email != null &&
-                    SecurityContextHolder.getContext()
-                            .getAuthentication() == null) {
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 email,
                                 null,
-                                List.of(
+                                Collections.singletonList(
                                         new SimpleGrantedAuthority(
                                                 "ROLE_" + role
                                         )
@@ -65,8 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception exception) {
-            // Invalid or expired JWT.
-            // Leave the request unauthenticated.
+            exception.printStackTrace();
         }
 
         filterChain.doFilter(request, response);

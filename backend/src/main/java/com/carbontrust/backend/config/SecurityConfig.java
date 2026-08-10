@@ -36,8 +36,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(
-                                "/users/register", "/users/login"
+                                "/users/register",
+                                "/users/login"
                         ).permitAll()
+
+                        .requestMatchers("/projects/**")
+                        .hasRole("NGO")
 
                         .requestMatchers("/admin/**")
                         .hasRole("ADMIN")
