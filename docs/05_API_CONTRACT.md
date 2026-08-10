@@ -34,12 +34,15 @@ The CarbonTrust Registry backend currently provides the following REST API endpo
 | POST | `/users/login` | Authenticate a user and generate a JWT token | Public |
 | GET | `/users/me` | Access a protected user endpoint | JWT Required |
 
+
+````markdown
 ### POST /users/register
 
 Registers a new user in the CarbonTrust Registry.
 
 ```http
 POST /users/register
+```
 
 ### Purpose
 
@@ -66,3 +69,4 @@ The registration API:
   "password": "Test@123",
   "dateOfBirth": "2005-01-01"
 }
+```
