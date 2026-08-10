@@ -2,6 +2,7 @@ package com.carbontrust.backend.entity;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Getter;
@@ -31,5 +32,7 @@ public class User {
     private Boolean status;
 
     private LocalDate dateOfBirth;
+
+    @CreationTimestamp
     private LocalDateTime createdAt;
 }
