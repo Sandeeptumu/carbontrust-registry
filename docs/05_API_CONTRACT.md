@@ -22,8 +22,23 @@ All API endpoints are accessed relative to this base URL.
 
 The user registration API allows new users to create an account in the CarbonTrust Registry.
 
-### Endpoint
+---
 
+## API Endpoints
+
+The CarbonTrust Registry backend currently provides the following REST API endpoints:
+
+| Method | Endpoint | Description | Authentication |
+|---|---|---|---|
+| POST | `/users/register` | Register a new user | Public |
+| POST | `/users/login` | Authenticate a user and generate a JWT token | Public |
+| GET | `/users/me` | Access a protected user endpoint | JWT Required |
+
+### POST /users/register
+
+Registers a new user in the CarbonTrust Registry.
+
+```http
 POST /users/register
 
 ### Purpose
