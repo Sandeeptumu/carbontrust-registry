@@ -1,5 +1,6 @@
 package com.carbontrust.backend.service;
 
+import com.carbontrust.backend.dto.CurrentUserResponse;
 import com.carbontrust.backend.dto.UserLoginRequest;
 import com.carbontrust.backend.dto.UserLoginResponse;
 import com.carbontrust.backend.dto.UserRegistrationRequest;
@@ -82,6 +83,20 @@ public class UserService {
                 user.getEmail(),
                 user.getRole(),
                 token
+        );
+    }
+    public CurrentUserResponse getCurrentUser(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        return new CurrentUserResponse(
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole()
         );
     }
 }

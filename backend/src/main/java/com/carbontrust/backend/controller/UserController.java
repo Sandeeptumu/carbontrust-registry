@@ -7,6 +7,8 @@ import com.carbontrust.backend.entity.User;
 import com.carbontrust.backend.service.UserService;
 import org.springframework.web.bind.annotation.*;
 import com.carbontrust.backend.dto.UserLoginResponse;
+import com.carbontrust.backend.dto.CurrentUserResponse;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/users")
@@ -30,8 +32,11 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public String getCurrentUser() {
-        return "You are authenticated!";
+    public CurrentUserResponse getCurrentUser(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        return userService.getCurrentUser(email);
     }
 
 }
