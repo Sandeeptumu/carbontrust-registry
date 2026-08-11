@@ -1,0 +1,156 @@
+package com.carbontrust.backend.service;
+
+import com.carbontrust.backend.dto.VerificationRequest;
+import com.carbontrust.backend.dto.VerificationResponse;
+import com.carbontrust.backend.entity.MRVSubmission;
+import com.carbontrust.backend.entity.User;
+import com.carbontrust.backend.entity.Verification;
+import com.carbontrust.backend.repository.MRVSubmissionRepository;
+import com.carbontrust.backend.repository.UserRepository;
+import com.carbontrust.backend.repository.VerificationRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class VerificationService {
+
+    private final VerificationRepository verificationRepository;
+    private final MRVSubmissionRepository mrvSubmissionRepository;
+    private final UserRepository userRepository;
+
+    public VerificationService(
+            VerificationRepository verificationRepository,
+            MRVSubmissionRepository mrvSubmissionRepository,
+            UserRepository userRepository
+    ) {
+        this.verificationRepository = verificationRepository;
+        this.mrvSubmissionRepository = mrvSubmissionRepository;
+        this.userRepository = userRepository;
+    }
+
+    public VerificationResponse verifyMRV(
+            Long mrvId,
+            VerificationRequest request,
+            String email
+    ) {
+
+        User verifier = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("Verifier not found")
+                );
+
+        if (!"VERIFIER".equals(verifier.getRole())) {
+            throw new RuntimeException(
+                    "Only verifiers can verify MRV submissions"
+            );
+        }
+
+        MRVSubmission mrvSubmission =
+                mrvSubmissionRepository.findById(mrvId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "MRV submission not found"
+                                )
+                        );
+
+        if (!"PENDING".equals(mrvSubmission.getMrvStatus())) {
+            throw new RuntimeException(
+                    "Only pending MRV submissions can be verified"
+            );
+        }
+
+        Verification verification = new Verification();
+
+        verification.setMrvSubmission(mrvSubmission);
+        verification.setVerifier(verifier);
+        verification.setVerificationStatus(
+                request.getVerificationStatus()
+        );
+        verification.setComments(request.getComments());
+
+        Verification savedVerification =
+                verificationRepository.save(verification);
+
+        mrvSubmission.setMrvStatus(
+                request.getVerificationStatus()
+        );
+
+        mrvSubmissionRepository.save(mrvSubmission);
+
+        return mapToResponse(savedVerification);
+    }
+
+    public List<VerificationResponse> getMRVVerifications(
+            Long mrvId,
+            String email
+    ) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        if (!"VERIFIER".equals(user.getRole()) &&
+                !"ADMIN".equals(user.getRole())) {
+
+            throw new RuntimeException(
+                    "Only verifiers or admins can view verification records"
+            );
+        }
+
+        if (!mrvSubmissionRepository.existsById(mrvId)) {
+            throw new RuntimeException(
+                    "MRV submission not found"
+            );
+        }
+
+        return verificationRepository
+                .findByMrvSubmissionMrvId(mrvId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private VerificationResponse mapToResponse(
+            Verification verification
+    ) {
+
+        VerificationResponse response =
+                new VerificationResponse();
+
+        response.setVerificationId(
+                verification.getVerificationId()
+        );
+
+        if (verification.getMrvSubmission() != null) {
+            response.setMrvId(
+                    verification.getMrvSubmission().getMrvId()
+            );
+        }
+
+        if (verification.getVerifier() != null) {
+            response.setVerifierId(
+                    verification.getVerifier().getUserId()
+            );
+
+            response.setVerifierUsername(
+                    verification.getVerifier().getUsername()
+            );
+        }
+
+        response.setVerificationStatus(
+                verification.getVerificationStatus()
+        );
+
+        response.setComments(
+                verification.getComments()
+        );
+
+        response.setVerificationDate(
+                verification.getVerificationDate()
+        );
+
+        return response;
+    }
+}
