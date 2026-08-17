@@ -3,12 +3,15 @@ package com.carbontrust.backend.service;
 import com.carbontrust.backend.dto.VerificationRequest;
 import com.carbontrust.backend.dto.VerificationResponse;
 import com.carbontrust.backend.entity.MRVSubmission;
+import com.carbontrust.backend.entity.Project;
 import com.carbontrust.backend.entity.User;
 import com.carbontrust.backend.entity.Verification;
 import com.carbontrust.backend.repository.MRVSubmissionRepository;
+import com.carbontrust.backend.repository.ProjectRepository;
 import com.carbontrust.backend.repository.UserRepository;
 import com.carbontrust.backend.repository.VerificationRepository;
 import org.springframework.stereotype.Service;
+
 
 import java.util.List;
 
@@ -18,15 +21,18 @@ public class VerificationService {
     private final VerificationRepository verificationRepository;
     private final MRVSubmissionRepository mrvSubmissionRepository;
     private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
 
     public VerificationService(
             VerificationRepository verificationRepository,
             MRVSubmissionRepository mrvSubmissionRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            ProjectRepository projectRepository
     ) {
         this.verificationRepository = verificationRepository;
         this.mrvSubmissionRepository = mrvSubmissionRepository;
         this.userRepository = userRepository;
+        this.projectRepository = projectRepository;
     }
 
     public VerificationResponse verifyMRV(
@@ -77,6 +83,16 @@ public class VerificationService {
         );
 
         mrvSubmissionRepository.save(mrvSubmission);
+
+        Project project = mrvSubmission.getProject();
+
+        if ("APPROVED".equals(request.getVerificationStatus())) {
+            project.setProjectStatus("VERIFIED");
+        } else if ("REJECTED".equals(request.getVerificationStatus())) {
+            project.setProjectStatus("REJECTED");
+        }
+
+        projectRepository.save(project);
 
         return mapToResponse(savedVerification);
     }
