@@ -5,6 +5,8 @@ import com.carbontrust.backend.dto.PurchaseResponse;
 import com.carbontrust.backend.entity.CarbonCreditBatch;
 import com.carbontrust.backend.entity.Purchase;
 import com.carbontrust.backend.entity.User;
+import com.carbontrust.backend.exception.BusinessException;
+import com.carbontrust.backend.exception.ResourceNotFoundException;
 import com.carbontrust.backend.repository.CarbonCreditBatchRepository;
 import com.carbontrust.backend.repository.PurchaseRepository;
 import com.carbontrust.backend.repository.UserRepository;
@@ -37,11 +39,11 @@ public class PurchaseService {
 
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("Buyer not found")
+                        new ResourceNotFoundException("Buyer not found")
                 );
 
         if (!"BUYER".equals(buyer.getRole())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Only buyers can purchase carbon credits"
             );
         }
@@ -49,13 +51,13 @@ public class PurchaseService {
         CarbonCreditBatch batch =
                 carbonCreditBatchRepository.findById(ccbId)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Carbon credit batch not found"
                                 )
                         );
 
         if (!"ACTIVE".equals(batch.getStatus())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Carbon credit batch is not active"
             );
         }
@@ -63,7 +65,7 @@ public class PurchaseService {
         if (request.getQuantity() >
                 batch.getAvailableQuantity()) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Not enough carbon credits available"
             );
         }
@@ -106,11 +108,11 @@ public class PurchaseService {
 
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("Buyer not found")
+                        new ResourceNotFoundException("Buyer not found")
                 );
 
         if (!"BUYER".equals(buyer.getRole())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Only buyers can view purchase history"
             );
         }

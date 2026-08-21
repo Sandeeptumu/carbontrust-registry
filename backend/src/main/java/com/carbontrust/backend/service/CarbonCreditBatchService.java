@@ -4,6 +4,8 @@ import com.carbontrust.backend.dto.CarbonCreditBatchRequest;
 import com.carbontrust.backend.dto.CarbonCreditBatchResponse;
 import com.carbontrust.backend.entity.CarbonCreditBatch;
 import com.carbontrust.backend.entity.Project;
+import com.carbontrust.backend.exception.BusinessException;
+import com.carbontrust.backend.exception.ResourceNotFoundException;
 import com.carbontrust.backend.repository.CarbonCreditBatchRepository;
 import com.carbontrust.backend.repository.ProjectRepository;
 import org.springframework.stereotype.Service;
@@ -31,11 +33,11 @@ public class CarbonCreditBatchService {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found")
+                        new ResourceNotFoundException("Project not found")
                 );
 
         if (!"VERIFIED".equals(project.getProjectStatus())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Carbon credits can only be issued for verified projects"
             );
         }
@@ -58,7 +60,7 @@ public class CarbonCreditBatchService {
     ) {
 
         if (!projectRepository.existsById(projectId)) {
-            throw new RuntimeException("Project not found");
+            throw new ResourceNotFoundException("Project not found");
         }
 
         return carbonCreditBatchRepository

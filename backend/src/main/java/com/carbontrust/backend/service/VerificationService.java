@@ -6,12 +6,13 @@ import com.carbontrust.backend.entity.MRVSubmission;
 import com.carbontrust.backend.entity.Project;
 import com.carbontrust.backend.entity.User;
 import com.carbontrust.backend.entity.Verification;
+import com.carbontrust.backend.exception.BusinessException;
+import com.carbontrust.backend.exception.ResourceNotFoundException;
 import com.carbontrust.backend.repository.MRVSubmissionRepository;
 import com.carbontrust.backend.repository.ProjectRepository;
 import com.carbontrust.backend.repository.UserRepository;
 import com.carbontrust.backend.repository.VerificationRepository;
 import org.springframework.stereotype.Service;
-
 
 import java.util.List;
 
@@ -43,11 +44,11 @@ public class VerificationService {
 
         User verifier = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("Verifier not found")
+                        new ResourceNotFoundException("Verifier not found")
                 );
 
         if (!"VERIFIER".equals(verifier.getRole())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Only verifiers can verify MRV submissions"
             );
         }
@@ -55,13 +56,13 @@ public class VerificationService {
         MRVSubmission mrvSubmission =
                 mrvSubmissionRepository.findById(mrvId)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "MRV submission not found"
                                 )
                         );
 
         if (!"PENDING".equals(mrvSubmission.getMrvStatus())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Only pending MRV submissions can be verified"
             );
         }
@@ -104,19 +105,19 @@ public class VerificationService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResourceNotFoundException("User not found")
                 );
 
         if (!"VERIFIER".equals(user.getRole()) &&
                 !"ADMIN".equals(user.getRole())) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Only verifiers or admins can view verification records"
             );
         }
 
         if (!mrvSubmissionRepository.existsById(mrvId)) {
-            throw new RuntimeException(
+            throw new ResourceNotFoundException(
                     "MRV submission not found"
             );
         }

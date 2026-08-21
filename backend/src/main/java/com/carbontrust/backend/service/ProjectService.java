@@ -4,6 +4,8 @@ import com.carbontrust.backend.dto.ProjectRequest;
 import com.carbontrust.backend.dto.ProjectResponse;
 import com.carbontrust.backend.entity.Project;
 import com.carbontrust.backend.entity.User;
+import com.carbontrust.backend.exception.BusinessException;
+import com.carbontrust.backend.exception.ResourceNotFoundException;
 import com.carbontrust.backend.repository.ProjectRepository;
 import com.carbontrust.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -31,7 +33,7 @@ public class ProjectService {
 
         User owner = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResourceNotFoundException("User not found")
                 );
 
         Project project = new Project();
@@ -57,11 +59,12 @@ public class ProjectService {
                 .map(this::mapToResponse)
                 .toList();
     }
+
     public ProjectResponse getProjectById(Long projectId) {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found")
+                        new ResourceNotFoundException("Project not found")
                 );
 
         return mapToResponse(project);
@@ -75,11 +78,11 @@ public class ProjectService {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found")
+                        new ResourceNotFoundException("Project not found")
                 );
 
         if (!project.getOwner().getEmail().equals(email)) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "You are not authorized to update this project"
             );
         }
@@ -95,6 +98,7 @@ public class ProjectService {
 
         return mapToResponse(updatedProject);
     }
+
     public void deleteProject(
             Long projectId,
             String email
@@ -102,11 +106,11 @@ public class ProjectService {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found")
+                        new ResourceNotFoundException("Project not found")
                 );
 
         if (!project.getOwner().getEmail().equals(email)) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "You are not authorized to delete this project"
             );
         }

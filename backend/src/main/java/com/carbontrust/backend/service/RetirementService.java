@@ -5,6 +5,8 @@ import com.carbontrust.backend.dto.RetirementResponse;
 import com.carbontrust.backend.entity.CarbonCreditRetirement;
 import com.carbontrust.backend.entity.Purchase;
 import com.carbontrust.backend.entity.User;
+import com.carbontrust.backend.exception.BusinessException;
+import com.carbontrust.backend.exception.ResourceNotFoundException;
 import com.carbontrust.backend.repository.CarbonCreditRetirementRepository;
 import com.carbontrust.backend.repository.PurchaseRepository;
 import com.carbontrust.backend.repository.UserRepository;
@@ -37,11 +39,11 @@ public class RetirementService {
 
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("Buyer not found")
+                        new ResourceNotFoundException("Buyer not found")
                 );
 
         if (!"BUYER".equals(buyer.getRole())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Only buyers can retire carbon credits"
             );
         }
@@ -49,7 +51,7 @@ public class RetirementService {
         Purchase purchase =
                 purchaseRepository.findById(purchaseId)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Purchase not found"
                                 )
                         );
@@ -57,7 +59,7 @@ public class RetirementService {
         if (!purchase.getBuyer().getUserId()
                 .equals(buyer.getUserId())) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "You can only retire credits from your own purchase"
             );
         }
@@ -75,7 +77,7 @@ public class RetirementService {
                 purchase.getQuantity() - alreadyRetired;
 
         if (request.getQuantity() > remainingCredits) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "You cannot retire more credits than you own"
             );
         }
@@ -99,11 +101,11 @@ public class RetirementService {
 
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("Buyer not found")
+                        new ResourceNotFoundException("Buyer not found")
                 );
 
         if (!"BUYER".equals(buyer.getRole())) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Only buyers can view retirement records"
             );
         }

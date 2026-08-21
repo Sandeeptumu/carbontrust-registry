@@ -4,6 +4,8 @@ import com.carbontrust.backend.dto.MRVSubmissionRequest;
 import com.carbontrust.backend.dto.MRVSubmissionResponse;
 import com.carbontrust.backend.entity.MRVSubmission;
 import com.carbontrust.backend.entity.Project;
+import com.carbontrust.backend.exception.BusinessException;
+import com.carbontrust.backend.exception.ResourceNotFoundException;
 import com.carbontrust.backend.repository.MRVSubmissionRepository;
 import com.carbontrust.backend.repository.ProjectRepository;
 import org.springframework.stereotype.Service;
@@ -32,11 +34,11 @@ public class MRVSubmissionService {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found")
+                        new ResourceNotFoundException("Project not found")
                 );
 
         if (!project.getOwner().getEmail().equals(email)) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "You are not authorized to submit MRV for this project"
             );
         }
@@ -63,11 +65,11 @@ public class MRVSubmissionService {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found")
+                        new ResourceNotFoundException("Project not found")
                 );
 
         if (!project.getOwner().getEmail().equals(email)) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "You are not authorized to view MRV submissions"
             );
         }
