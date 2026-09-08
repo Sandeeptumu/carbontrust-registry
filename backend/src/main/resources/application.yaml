@@ -3,21 +3,18 @@ spring:
     name: backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/carbontrust
-    username: root
-    password:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:carbontrust}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
 
   jpa:
     hibernate:
       ddl-auto: update
-
     show-sql: true
-
     properties:
       hibernate:
         format_sql: true
 
-
 jwt:
-  secret: carbontrust-super-secret-key-for-jwt-2026
-  expiration: 3600000
+  secret: ${JWT_SECRET:CHANGE_ME_dev_only_secret}
+  expiration: ${JWT_EXPIRATION:3600000}

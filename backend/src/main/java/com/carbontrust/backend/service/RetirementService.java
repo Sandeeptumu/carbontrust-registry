@@ -117,6 +117,14 @@ public class RetirementService {
                 .toList();
     }
 
+    public List<RetirementResponse> getAllRetirements() {
+
+        return retirementRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private RetirementResponse mapToResponse(
             CarbonCreditRetirement retirement
     ) {

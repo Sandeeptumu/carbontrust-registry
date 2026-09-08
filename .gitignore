@@ -29,3 +29,30 @@ replay_pid*
 
 .idea/
 *.iml
+
+# Mobile (Expo / React Native)
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/*.log
+mobile/.expo-shared/
+
+# --- Production prep: secrets & generated artifacts ---
+# Environment files — never commit real secrets. .env.example (placeholders only) IS committed.
+.env
+.env.*
+!.env.example
+
+# Database dumps / backups — never commit SQL files
+*.sql
+# ...but never ignore real migration SQL (Flyway/Liquibase), if added later
+!backend/src/main/resources/db/migration/**
+
+# Build artifacts & dependencies (defense in depth; also covered by sub-gitignores)
+node_modules/
+target/
+dist/
+
+# Editor directories
+.vscode/

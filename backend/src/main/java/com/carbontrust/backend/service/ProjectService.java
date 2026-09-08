@@ -130,6 +130,8 @@ public class ProjectService {
         response.setArea(project.getArea());
         response.setStartDate(project.getStartDate());
         response.setProjectStatus(project.getProjectStatus());
+        response.setCreatedAt(project.getCreatedAt());
+        response.setUpdatedAt(project.getUpdatedAt());
 
         if (project.getOwner() != null) {
             response.setOwnerId(project.getOwner().getUserId());

@@ -2,6 +2,7 @@ package com.carbontrust.backend.service;
 
 import com.carbontrust.backend.dto.MRVSubmissionRequest;
 import com.carbontrust.backend.dto.MRVSubmissionResponse;
+import com.carbontrust.backend.dto.VerifierSubmissionResponse;
 import com.carbontrust.backend.entity.MRVSubmission;
 import com.carbontrust.backend.entity.Project;
 import com.carbontrust.backend.exception.BusinessException;
@@ -79,6 +80,61 @@ public class MRVSubmissionService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    public List<VerifierSubmissionResponse> getAllSubmissions(
+            String status
+    ) {
+
+        List<MRVSubmission> submissions =
+                (status == null || status.isBlank())
+                        ? mrvSubmissionRepository.findAll()
+                        : mrvSubmissionRepository
+                                .findAllByMrvStatus(status);
+
+        return submissions
+                .stream()
+                .map(this::mapToVerifierResponse)
+                .toList();
+    }
+
+    private VerifierSubmissionResponse mapToVerifierResponse(
+            MRVSubmission submission
+    ) {
+
+        VerifierSubmissionResponse response =
+                new VerifierSubmissionResponse();
+
+        response.setMrvId(submission.getMrvId());
+        response.setUploadDate(submission.getUploadDate());
+        response.setMrvStatus(submission.getMrvStatus());
+        response.setPhotoVerification(
+                submission.getPhotoVerification()
+        );
+        response.setRemarks(submission.getRemarks());
+
+        Project project = submission.getProject();
+
+        if (project != null) {
+
+            response.setProjectId(project.getProjectId());
+            response.setProjectName(project.getProjectName());
+            response.setEcosystemType(
+                    project.getEcosystemType()
+            );
+            response.setLocation(project.getLocation());
+            response.setProjectStatus(
+                    project.getProjectStatus()
+            );
+
+            if (project.getOwner() != null) {
+                response.setOwnerUsername(
+                        project.getOwner().getUsername()
+                );
+            }
+        }
+
+        return response;
     }
 
     private MRVSubmissionResponse mapToResponse(

@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "CarbonTrust Registry",
+    "slug": "carbontrust-registry",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F6F9F5",
+    "splash": {
+      "backgroundColor": "#0B2E20",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.carbontrust.registry"
+    },
+    "android": {
+      "package": "com.carbontrust.registry",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B2E20"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

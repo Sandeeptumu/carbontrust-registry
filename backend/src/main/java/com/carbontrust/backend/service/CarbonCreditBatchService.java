@@ -2,6 +2,7 @@ package com.carbontrust.backend.service;
 
 import com.carbontrust.backend.dto.CarbonCreditBatchRequest;
 import com.carbontrust.backend.dto.CarbonCreditBatchResponse;
+import com.carbontrust.backend.dto.MarketplaceCreditResponse;
 import com.carbontrust.backend.entity.CarbonCreditBatch;
 import com.carbontrust.backend.entity.Project;
 import com.carbontrust.backend.exception.BusinessException;
@@ -77,6 +78,64 @@ public class CarbonCreditBatchService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    public List<CarbonCreditBatchResponse> getAllBatches() {
+
+        return carbonCreditBatchRepository
+                .findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public List<MarketplaceCreditResponse> getMarketplaceCredits() {
+
+        return carbonCreditBatchRepository
+                .findByStatus("ACTIVE")
+                .stream()
+                .map(this::mapToMarketplaceResponse)
+                .toList();
+    }
+
+    private MarketplaceCreditResponse mapToMarketplaceResponse(
+            CarbonCreditBatch batch
+    ) {
+
+        MarketplaceCreditResponse response =
+                new MarketplaceCreditResponse();
+
+        response.setCcbId(batch.getCcbId());
+        response.setOriginalQuantity(
+                batch.getOriginalQuantity()
+        );
+        response.setAvailableQuantity(
+                batch.getAvailableQuantity()
+        );
+        response.setStatus(batch.getStatus());
+        response.setIssuedDate(batch.getIssuedDate());
+        response.setPricePerCredit(10.0);
+
+        if (batch.getProject() != null) {
+
+            Project project = batch.getProject();
+
+            response.setProjectId(project.getProjectId());
+            response.setProjectName(project.getProjectName());
+            response.setDescription(project.getDescription());
+            response.setEcosystemType(
+                    project.getEcosystemType()
+            );
+            response.setLocation(project.getLocation());
+
+            if (project.getOwner() != null) {
+                response.setOwnerUsername(
+                        project.getOwner().getUsername()
+                );
+            }
+        }
+
+        return response;
     }
 
     private CarbonCreditBatchResponse mapToResponse(

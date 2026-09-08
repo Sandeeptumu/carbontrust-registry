@@ -2,6 +2,7 @@ package com.carbontrust.backend.service;
 
 import com.carbontrust.backend.dto.VerificationRequest;
 import com.carbontrust.backend.dto.VerificationResponse;
+import com.carbontrust.backend.dto.VerifierVerificationResponse;
 import com.carbontrust.backend.entity.MRVSubmission;
 import com.carbontrust.backend.entity.Project;
 import com.carbontrust.backend.entity.User;
@@ -127,6 +128,72 @@ public class VerificationService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    public List<VerifierVerificationResponse> getVerificationHistory(
+            String email
+    ) {
+
+        User verifier = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Verifier not found"
+                        )
+                );
+
+        if (!"VERIFIER".equals(verifier.getRole())) {
+            throw new BusinessException(
+                    "Only verifiers can view verification history"
+            );
+        }
+
+        return verificationRepository
+                .findByVerifierUserId(verifier.getUserId())
+                .stream()
+                .map(this::mapToHistoryResponse)
+                .toList();
+    }
+
+    private VerifierVerificationResponse mapToHistoryResponse(
+            Verification verification
+    ) {
+
+        VerifierVerificationResponse response =
+                new VerifierVerificationResponse();
+
+        response.setVerificationId(
+                verification.getVerificationId()
+        );
+        response.setVerificationStatus(
+                verification.getVerificationStatus()
+        );
+        response.setComments(verification.getComments());
+        response.setVerificationDate(
+                verification.getVerificationDate()
+        );
+
+        if (verification.getVerifier() != null) {
+            response.setVerifierUsername(
+                    verification.getVerifier().getUsername()
+            );
+        }
+
+        MRVSubmission submission =
+                verification.getMrvSubmission();
+
+        if (submission != null) {
+
+            response.setMrvId(submission.getMrvId());
+
+            Project project = submission.getProject();
+
+            if (project != null) {
+                response.setProjectId(project.getProjectId());
+                response.setProjectName(project.getProjectName());
+            }
+        }
+
+        return response;
     }
 
     private VerificationResponse mapToResponse(

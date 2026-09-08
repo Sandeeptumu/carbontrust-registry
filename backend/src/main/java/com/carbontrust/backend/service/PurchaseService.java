@@ -124,6 +124,14 @@ public class PurchaseService {
                 .toList();
     }
 
+    public List<PurchaseResponse> getAllPurchases() {
+
+        return purchaseRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private PurchaseResponse mapToResponse(
             Purchase purchase
     ) {

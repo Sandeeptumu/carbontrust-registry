@@ -1,6 +1,6 @@
 # 🌱 CarbonTrust Registry
 
-An AI-powered Carbon Credit Registry for Blue Carbon Ecosystems built using Spring Boot, React, and MySQL.
+An AI-powered Carbon Credit Registry for Blue Carbon Ecosystems built using Spring Boot, React, and MySQL — with a React Native (Expo) mobile app that reuses the same backend and authentication.
 
 ---
 
@@ -76,10 +76,37 @@ carbontrust-registry/
 
 backend/
 frontend/
+mobile/     ← React Native + Expo mobile app (reuses this backend)
 docs/
 
 README.md
 ```
+
+---
+
+## 🚀 Getting Started
+
+### Backend (Spring Boot + MySQL)
+
+1. Create a MySQL database named `carbontrust`.
+2. Adjust credentials in `backend/src/main/resources/application.yaml` if needed.
+3. Run the app: `cd backend && ./mvnw spring-boot:run` (serves on `http://localhost:8080`).
+
+### Frontend (React + Vite)
+
+1. `cd frontend && npm install`
+2. `npm run dev` (serves on `http://localhost:5173` and proxies API calls to the backend).
+3. Open http://localhost:5173 — new sign-ups get the **BUYER** role; see `frontend/README.md`
+   for how to seed NGO / Verifier / Admin demo accounts.
+
+### Mobile App (React Native + Expo)
+
+1. `cd mobile && npm install`
+2. With the backend running, start Expo: `npx expo start` and press `a` (Android emulator),
+   `i` (iOS simulator) or scan the QR with Expo Go.
+3. The app reuses the existing REST API + JWT auth — no separate backend or database.
+   API/base-URL config lives in `mobile/src/constants/config.js`.
+4. See `mobile/README.md` for the full guide (roles, screens, endpoints, security).
 
 ---
 
@@ -89,7 +116,8 @@ README.md
 - Requirements
 - Architecture
 - Database Design
-- API Design (In Progress)
+- API Design
+- Frontend Guide (`frontend/README.md`)
 
 ---
 
@@ -99,9 +127,10 @@ README.md
 - [x] Requirement Analysis
 - [x] Architecture Design
 - [x] Database Design
-- [ ] API Design
-- [ ] Backend Development
-- [ ] Frontend Development
+- [x] API Design
+- [x] Backend Development
+- [x] Frontend Development
+- [x] Mobile Application (Expo)
 - [ ] Testing
 - [ ] Deployment
 

@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -19,6 +20,8 @@ public class ProjectResponse {
     private Double area;
     private LocalDate startDate;
     private String projectStatus;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     private Long ownerId;
     private String ownerUsername;

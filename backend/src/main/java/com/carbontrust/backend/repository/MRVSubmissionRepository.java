@@ -11,5 +11,7 @@ public interface MRVSubmissionRepository
         extends JpaRepository<MRVSubmission, Long> {
 
     List<MRVSubmission> findByProjectProjectId(Long projectId);
+
+    List<MRVSubmission> findAllByMrvStatus(String mrvStatus);
 }
 
