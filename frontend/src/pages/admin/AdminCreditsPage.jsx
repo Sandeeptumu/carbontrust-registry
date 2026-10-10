@@ -7,9 +7,42 @@ import { StatusBadge } from '../../components/ui/Badge'
 import EmptyState, { ErrorState } from '../../components/ui/EmptyState'
 import { SkeletonList } from '../../components/ui/Loaders'
 import { useAsync } from '../../hooks/useAsync'
-import { adminCredits } from '../../api/admin'
+import Button from '../../components/ui/Button'
+import { Input, Select } from '../../components/ui/Fields'
+import { issueCredits } from '../../api/credits'
+import { adminCredits, adminProjects } from '../../api/admin'
 import { BATCH_STATUS } from '../../utils/status'
 import { formatNumber, formatDate } from '../../utils/format'
+
+function IssueCredits({ onIssued }) {
+  const projects = useAsync(useMemo(() => adminProjects, []))
+  const [projectId, setProjectId] = useState('')
+  const [quantity, setQuantity] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const submit = async event => {
+    event.preventDefault()
+    if (busy) return
+    if (!projectId || !Number.isFinite(Number(quantity)) || Number(quantity) <= 0) { setError('Choose a verified project and enter a positive quantity.'); return }
+    setBusy(true); setError(''); setSuccess('')
+    try {
+      const batch = await issueCredits(Number(projectId), Number(quantity))
+      setSuccess(`Batch ${batch.ccbId ? '#' + batch.ccbId : ''} issued successfully.`)
+      setQuantity('')
+      await onIssued()
+    } catch (err) { setError(err.message || 'Issuance failed. Please try again.') }
+    finally { setBusy(false) }
+  }
+  return <Card className="card--pad mb-4"><h2>Issue verified credits</h2><p className="muted text-sm mb-4">Enter the quantity supported by the verified evidence. The registry does not estimate carbon quantities or set prices.</p>
+    {projects.error ? <ErrorState error={projects.error} onRetry={projects.run} /> : <form onSubmit={submit}>
+      <div className="row row--wrap" style={{ alignItems: 'start' }}><Select label="Verified project" value={projectId} onChange={e => setProjectId(e.target.value)} required disabled={busy || projects.loading}><option value="">Choose project</option>{(projects.data || []).filter(p => p.projectStatus === 'VERIFIED').map(p => <option value={p.projectId} key={p.projectId}>{p.projectName} · #{p.projectId}</option>)}</Select>
+      <Input label="Verified quantity (tCO₂e)" type="number" min="0.001" step="any" required value={quantity} onChange={e => setQuantity(e.target.value)} disabled={busy} /></div>
+      {error && <div className="alert alert--danger mb-4" role="alert">{error}</div>}{success && <div className="alert alert--success mb-4" role="status">{success}</div>}
+      <Button type="submit" loading={busy} disabled={!projectId || !quantity}>Issue credits</Button>
+    </form>}
+  </Card>
+}
 
 export default function AdminCreditsPage() {
   const [query, setQuery] = useState('')
@@ -49,6 +82,7 @@ export default function AdminCreditsPage() {
         }
       />
 
+      <IssueCredits onIssued={run} />
       <Card style={{ padding: '14px 18px', marginBottom: 18 }}>
         <div className="row" style={{ position: 'relative' }}>
           <Search size={17} style={{ position: 'absolute', left: 12, color: 'var(--muted)' }} aria-hidden="true" />

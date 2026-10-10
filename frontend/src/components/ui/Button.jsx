@@ -8,6 +8,7 @@ export default function Button({
   size,
   to,
   loading = false,
+  block = false,
   icon: Icon,
   children,
   className = '',
@@ -16,7 +17,7 @@ export default function Button({
   ...rest
 }) {
   const variantClass = VARIANTS.includes(variant) ? `btn--${variant}` : 'btn--primary'
-  const classes = `btn ${variantClass} ${size ? `btn--${size}` : ''} ${className}`.trim()
+  const classes = `btn ${variantClass} ${size ? `btn--${size}` : ''} ${block ? 'btn--block' : ''} ${className}`.trim()
 
   const content = (
     <>

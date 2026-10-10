@@ -10,6 +10,8 @@ import NotFoundPage from './pages/common/NotFoundPage'
 import Landing from './pages/landing/Landing'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import RecoveryPage from './pages/auth/RecoveryPage'
+import SignInMethodsPage from './pages/auth/SignInMethodsPage'
 
 // Buyer
 import BuyerDashboard from './pages/buyer/BuyerDashboard'
@@ -31,14 +33,13 @@ import HistoryPage from './pages/verifier/HistoryPage'
 
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminMRVPage from './pages/admin/AdminMRVPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminProjectsPage from './pages/admin/AdminProjectsPage'
 import AdminCreditsPage from './pages/admin/AdminCreditsPage'
 import AdminPurchasesPage from './pages/admin/AdminPurchasesPage'
 
 // Health
-import PersonalHealthPage from './pages/health/PersonalHealthPage'
-import PersonalHealthEditPage from './pages/health/PersonalHealthEditPage'
 import HealthcarePage from './pages/health/HealthcarePage'
 
 /** Redirects signed-in users away from public pages. */
@@ -80,13 +81,19 @@ export default function App() {
               }
             />
 
+            <Route path="/forgot-password" element={<RecoveryPage key="forgot" mode="forgot" />} />
+            <Route path="/resend-verification" element={<RecoveryPage key="resend" mode="resend" />} />
+            <Route path="/reset-password" element={<RecoveryPage key="reset" mode="reset" />} />
+            <Route path="/verify-email" element={<RecoveryPage key="verify" mode="verify" />} />
             {/* Authenticated application shell */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>
+                <Route path="/account/sign-in" element={<SignInMethodsPage />} />
                 {/* ADMIN */}
                 <Route element={<RoleRoute roles={['ADMIN']} />}>
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
+                  <Route path="/admin/mrv" element={<AdminMRVPage />} />
                   <Route path="/admin/users" element={<AdminUsersPage />} />
                   <Route path="/admin/projects" element={<AdminProjectsPage />} />
                   <Route path="/admin/credits" element={<AdminCreditsPage />} />
@@ -114,7 +121,7 @@ export default function App() {
                 </Route>
 
                 {/* BUYER */}
-                <Route element={<RoleRoute roles={['BUYER']} />}>
+                <Route element={<RoleRoute roles={['USER']} />}>
                   <Route path="/buyer" element={<BuyerDashboard />} />
                   <Route path="/buyer/dashboard" element={<Navigate to="/buyer" replace />} />
                   <Route path="/buyer/marketplace" element={<MarketplacePage />} />
@@ -123,14 +130,8 @@ export default function App() {
                   <Route path="/buyer/retirements" element={<RetirementsPage />} />
                 </Route>
 
-                {/* USER (personal health) */}
-                <Route element={<RoleRoute roles={['USER', 'HEALTHCARE_ADVISOR']} />}>
-                  <Route path="/personal-health" element={<PersonalHealthPage />} />
-                  <Route path="/personal-health/edit" element={<PersonalHealthEditPage />} />
-                </Route>
-
-                {/* HEALTHCARE_ADVISOR */}
-                <Route element={<RoleRoute roles={['HEALTHCARE_ADVISOR']} />}>
+                {/* HEALTHCARE_ASSISTANT */}
+                <Route element={<RoleRoute roles={['HEALTHCARE_ASSISTANT']} />}>
                   <Route path="/health" element={<HealthcarePage />} />
                 </Route>
 

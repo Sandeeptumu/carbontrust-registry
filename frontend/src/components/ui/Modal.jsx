@@ -15,27 +15,37 @@ export default function Modal({
   footer,
 }) {
   const panelRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
   useEffect(() => {
     if (!open) return undefined
+    const previousFocus = document.activeElement
+    const selector = 'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
     const onKey = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCloseRef.current()
+      if (event.key !== 'Tab') return
+      const nodes = [...(panelRef.current?.querySelectorAll(selector) || [])]
+      const first = nodes[0]
+      const last = nodes[nodes.length - 1]
+      if (!first) { event.preventDefault(); return }
+      if (event.shiftKey && (document.activeElement === first || !panelRef.current?.contains(document.activeElement))) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !panelRef.current?.contains(document.activeElement))) {
+        event.preventDefault(); first.focus()
+      }
     }
     document.addEventListener('keydown', onKey)
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    // Move focus into the dialog.
-    requestAnimationFrame(() => {
-      const focusable = panelRef.current?.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      )
-      focusable?.focus()
-    })
+    const frame = requestAnimationFrame(() => panelRef.current?.querySelector(selector)?.focus())
     return () => {
+      cancelAnimationFrame(frame)
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = previousOverflow
+      previousFocus?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (typeof document === 'undefined') return null
 

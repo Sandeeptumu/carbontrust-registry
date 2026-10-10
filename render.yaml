@@ -1,0 +1,39 @@
+# Free Java web service; MySQL must be provisioned separately (for example Aiven Free).
+# Run Flyway with the database operator account BEFORE starting this service.
+services:
+  - type: web
+    name: carbontrust-backend
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /users/csrf
+    autoDeployTrigger: "off"
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: SPRING_FLYWAY_ENABLED
+        value: "false"
+      - key: APP_URL
+        sync: false
+      - key: SECURE_COOKIES
+        value: "true"
+      - key: MAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "2525"
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_AUTH
+        value: "true"
+      - key: SMTP_TLS
+        value: "true"

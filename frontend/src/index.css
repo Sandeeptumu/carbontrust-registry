@@ -1,3 +1,7 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
 /* ============================================================
    CarbonTrust Registry — Design System
    ============================================================ */
@@ -1067,4 +1071,81 @@ img { max-width: 100%; }
   .market-hero { padding: 24px; }
   .profile-menu__meta { display: none; }
   .hide-mobile { display: none !important; }
+}
+
+/* Layered landscape supplied with the wilderness component. */
+.wilderness { position: relative; isolation: isolate; overflow: hidden; width: 100%; min-height: 780px; min-height: max(780px, 100svh); display: grid; place-items: center; background: #163d3c; color: white; }
+.wilderness__scene { position: absolute; width: 1440px; height: 800px; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(var(--scene-scale, 1)); }
+.wilderness__layer { position: absolute; max-width: none; pointer-events: none; transform: translate(-50%, -50%); transition: transform 450ms ease-out; }
+.wilderness__shade { position: absolute; inset: 0; z-index: 115; pointer-events: none; background: linear-gradient(180deg, rgb(3 24 27 / 55%), rgb(3 24 27 / 28%) 35%, rgb(3 24 27 / 28%) 55%, rgb(3 24 27 / 80%)); }
+.wilderness__content { position: relative; z-index: 120; text-align: center; padding: 160px 24px 150px; width: 100%; text-shadow: 0 2px 25px rgb(0 0 0 / 30%); }
+.wilderness__eyebrow { font-size: 14px; text-transform: uppercase; letter-spacing: .2em; font-weight: 600; }
+.wilderness h1 { font-family: var(--font-display); font-size: clamp(3rem, 11vw, 10.5rem); line-height: 1.12; letter-spacing: -.055em; font-weight: 800; margin: 22px 0 14px; color: #fff; }
+.wilderness__tagline { font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -.025em; }
+.wilderness__description { font-size: 17px; line-height: 1.8; max-width: 540px; margin: 18px auto 0; color: #edf5f4; }
+.wilderness__actions { display: flex; justify-content: center; gap: 14px; margin-top: 32px; flex-wrap: wrap; text-shadow: none; }
+.wilderness__actions .btn { min-height: 50px; }
+.wilderness__actions .btn--light { background: rgb(5 30 29 / 65%); border-color: rgb(255 255 255 / 40%); }
+.wilderness__caption { position: absolute; z-index: 120; bottom: 40px; text-align: center; left: 20px; right: 20px; text-transform: uppercase; font-size: 12px; letter-spacing: .22em; color: #d1e4df; }
+@media (max-width: 600px) {
+  .wilderness { min-height: max(760px, 100svh); }
+  .wilderness__content { padding: 145px 20px 120px; }
+  .wilderness__eyebrow { letter-spacing: .1em; }
+  .wilderness__actions { flex-direction: column; align-items: stretch; max-width: 320px; margin-inline: auto; }
+  .wilderness__description { font-size: 16px; }
+  .wilderness__caption { letter-spacing: .12em; }
+}
+@media (prefers-reduced-motion: reduce) { .wilderness__layer { transition: none; } }
+
+/* Email access: forest, tidal teal and warm paper. */
+.registry-auth { min-height: 100svh; background: #f6f7f1; color: #163e32; padding: 28px clamp(20px, 5vw, 80px); display: flex; flex-direction: column; }
+.registry-auth__header, .registry-auth__footer { width: 100%; max-width: 1240px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.registry-auth__brand { display: flex; align-items: center; gap: 10px; color: #173e32; font-size: 21px; font-weight: 750; text-decoration: none; }
+.registry-auth__brand > span { background: #174e3b; color: #e9f2e5; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; }
+.registry-auth__brand small { font-size: 9px; letter-spacing: .18em; align-self: end; padding-bottom: 7px; color: #536a60; }
+.registry-auth__back { display: flex; align-items: center; gap: 8px; color: #2c5e4c; text-decoration: none; font-size: 13px; }
+.registry-auth__main { width: 100%; max-width: 1120px; margin: auto; padding: 42px 0; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 7vw, 104px); align-items: center; }
+.registry-auth__story { position: relative; overflow: hidden; min-height: 590px; padding: 42px; border-radius: 22px; background: #123e33; color: #edf6eb; display: flex; flex-direction: column; }
+.registry-auth__tag { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .2em; font-weight: 700; color: #c5d7bf; }
+.registry-auth__tag span { width: 6px; height: 6px; border-radius: 50%; background: #b0d2a1; }
+.registry-auth__story h2 { position: relative; z-index: 1; font-size: clamp(32px, 3.8vw, 48px); line-height: 1.15; letter-spacing: -.045em; color: #fbf9ed; margin: 36px 0 20px; font-weight: 500; }
+.registry-auth__story h2 em { font-family: Georgia, serif; font-weight: 400; color: #c9dec0; }
+.registry-auth__story > p { position: relative; z-index: 1; font-size: 14px; line-height: 1.8; color: #cee0d6; max-width: 280px; }
+.registry-auth__landscape { position: absolute; inset: 235px -80px 20px -80px; overflow: hidden; }
+.contour { position: absolute; width: 560px; height: 450px; border: 1px solid #719d8150; border-radius: 46% 54% 66% 34% / 50% 44% 56% 50%; transform: rotate(-22deg); }
+.contour--one { top: 58px; left: -35px; box-shadow: 0 0 0 17px #719d8110, 0 0 0 35px #719d8110, 0 0 0 53px #719d8110, 0 0 0 72px #719d8110; }
+.contour--two { top: 140px; left: 135px; background: #25736524; }
+.contour--three { top: 110px; left: -210px; border-color: #cadfa333; }
+.registry-auth__waves { position: absolute; top: 140px; left: 190px; color: #c5d9b780; }
+.registry-auth__leaf { position: absolute; top: 50px; right: 135px; color: #abc3a177; transform: rotate(-20deg); }
+.registry-auth__caption { position: relative; z-index: 1; margin-top: auto; padding-top: 160px; display: flex; align-items: center; gap: 14px; font-size: 12px; line-height: 1.7; color: #d0dfd5; }
+.registry-auth__form { min-width: 0; padding: 16px 0; }
+.registry-auth .auth-card { width: 100%; max-width: 420px; margin: auto; padding: 0; background: transparent; border: 0; box-shadow: none; animation: registry-enter .45s ease both; }
+.registry-auth .auth-title { font-size: clamp(28px, 3vw, 36px); color: #153f32; letter-spacing: -.04em; line-height: 1.2; margin: 12px 0; }
+.auth-eyebrow { color: #4f7061; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .14em; }
+.registry-auth .auth-sub { color: #607168; font-size: 14px; margin-bottom: 30px; }
+.registry-auth .input { min-height: 48px; border: 1px solid #cdd8cd; border-radius: 9px; background: #fffefa; color: #173e32; }
+.registry-auth .input:focus { border-color: #267763; box-shadow: 0 0 0 3px #26776320; }
+.registry-auth .input--error { border-color: #b7443c; }
+.registry-auth .field__label { color: #294b3c; font-size: 13px; }
+.registry-auth .btn--primary { min-height: 48px; border-radius: 9px; background: #175442; border-color: #175442; box-shadow: none; }
+.registry-auth .btn--primary:hover { background: #246e57; transform: translateY(-1px); }
+.registry-auth .btn--primary:active { transform: translateY(0); }
+.registry-auth a:focus-visible, .registry-auth button:focus-visible { outline: 3px solid #418a71; outline-offset: 4px; }
+.registry-auth .auth-foot { border: 0; text-align: center; font-size: 13px; color: #5f7268; padding: 0; margin-top: 22px; }
+.registry-auth .auth-foot a, .auth-recovery a { color: #185d48; font-weight: 650; text-underline-offset: 4px; }
+.auth-recovery { text-align: right; font-size: 12px; margin: -4px 0 22px; }
+.auth-helper { font-size: 12px; line-height: 1.6; color: #536b5d; margin-top: 16px; }
+.registry-auth__footer { font-size: 11px; color: #64756a; padding-top: 10px; }
+@keyframes registry-enter { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 900px) { .registry-auth__main { gap: 32px; } .registry-auth__story { padding: 28px; } }
+@media (max-width: 700px) {
+  .registry-auth { padding: 22px 22px; }
+  .registry-auth__brand small, .registry-auth__back, .registry-auth__story { display: none; }
+  .registry-auth__main { grid-template-columns: 1fr; padding: 48px 0; max-width: 440px; }
+  .registry-auth__footer { flex-wrap: wrap; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .registry-auth *, .registry-auth *::before, .registry-auth *::after { animation: none !important; transition: none !important; }
+  .registry-auth .btn:hover { transform: none; }
 }

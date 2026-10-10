@@ -1,29 +1,24 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bell, LogOut, Menu, UserRound } from 'lucide-react'
+import { LogOut, Menu, UserRound, KeyRound } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { useToast } from '../../context/ToastContext'
 import { useClickOutside } from '../../hooks/useClickOutside'
 import { Avatar, RoleBadge } from '../ui/Avatar'
 import { getRoleMeta, roleHome } from '../../utils/roles'
 
 export default function Topbar({ onOpenMenu, title }) {
   const { user, logout } = useAuth()
-  const toast = useToast()
   const navigate = useNavigate()
   const [profileOpen, setProfileOpen] = useState(false)
-  const [notifOpen, setNotifOpen] = useState(false)
   const profileRef = useRef(null)
-  const notifRef = useRef(null)
   const roleMeta = getRoleMeta(user?.role)
 
   useClickOutside(profileRef, () => setProfileOpen(false), profileOpen)
-  useClickOutside(notifRef, () => setNotifOpen(false), notifOpen)
 
   const handleLogout = () => {
     setProfileOpen(false)
-    logout('You have been signed out. See you soon!', 'Signed out')
+    logout('You have been signed out.').catch(() => {})
   }
 
   const initials = String(user?.username || '?').charAt(0).toUpperCase()
@@ -38,41 +33,6 @@ export default function Topbar({ onOpenMenu, title }) {
       </div>
 
       <div className="topbar__spacer" />
-
-      <div className="profile-menu" ref={notifRef}>
-        <button
-          type="button"
-          className="icon-btn"
-          onClick={() => setNotifOpen((open) => !open)}
-          aria-label="Notifications"
-          aria-expanded={notifOpen}
-        >
-          <Bell size={18} />
-        </button>
-        <AnimatePresence>
-          {notifOpen && (
-            <motion.div
-              className="profile-menu__panel"
-              initial={{ opacity: 0, y: -6, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.98 }}
-              transition={{ duration: 0.16 }}
-            >
-              <div className="profile-menu__head" style={{ display: 'block' }}>
-                <div className="bold" style={{ fontSize: 14 }}>Notifications</div>
-              </div>
-              <button
-                type="button"
-                className="profile-menu__item"
-                onClick={() => toast.info('No new notifications — activity updates arrive here.')}
-              >
-                <Bell size={16} />
-                You&apos;re all caught up
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
       <div className="profile-menu" ref={profileRef}>
         <button
@@ -118,6 +78,9 @@ export default function Topbar({ onOpenMenu, title }) {
               >
                 <UserRound size={16} />
                 My dashboard
+              </button>
+              <button type="button" className="profile-menu__item" onClick={() => { setProfileOpen(false); navigate('/account/sign-in') }}>
+                <KeyRound size={16} /> Account security
               </button>
               <button type="button" className="profile-menu__item profile-menu__item--danger" onClick={handleLogout}>
                 <LogOut size={16} />

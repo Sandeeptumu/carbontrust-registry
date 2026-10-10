@@ -14,25 +14,32 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class CarbonCreditBatchService {
 
     private final CarbonCreditBatchRepository carbonCreditBatchRepository;
     private final ProjectRepository projectRepository;
+    private final com.carbontrust.backend.repository.UserRepository users;
 
     public CarbonCreditBatchService(
             CarbonCreditBatchRepository carbonCreditBatchRepository,
-            ProjectRepository projectRepository
+            ProjectRepository projectRepository, com.carbontrust.backend.repository.UserRepository users
     ) {
         this.carbonCreditBatchRepository = carbonCreditBatchRepository;
         this.projectRepository = projectRepository;
+        this.users = users;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public CarbonCreditBatchResponse issueCredits(
             Long projectId,
-            CarbonCreditBatchRequest request
+            CarbonCreditBatchRequest request, String email
     ) {
 
-        Project project = projectRepository.findById(projectId)
+        var actor = users.findByEmail(email).orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Account unavailable"));
+        if (!"ADMIN".equals(actor.getRole()) || !Boolean.TRUE.equals(actor.getStatus())) throw new org.springframework.security.access.AccessDeniedException("Administrator access required");
+        if (request.getQuantity() == null || !Double.isFinite(request.getQuantity()) || request.getQuantity() <= 0) throw new BusinessException("Quantity must be positive and finite");
+        Project project = projectRepository.findLockedById(projectId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Project not found")
                 );
@@ -57,12 +64,14 @@ public class CarbonCreditBatchService {
     }
 
     public List<CarbonCreditBatchResponse> getProjectCredits(
-            Long projectId
+            Long projectId, String email
     ) {
-
-        if (!projectRepository.existsById(projectId)) {
-            throw new ResourceNotFoundException("Project not found");
-        }
+        var actor = users.findByEmail(email).orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Account unavailable"));
+        var project = projectRepository.findById(projectId).orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        boolean authorized = "ADMIN".equals(actor.getRole())
+                || ("NGO".equals(actor.getRole()) && project.getOwner().getUserId().equals(actor.getUserId()));
+        if (!Boolean.TRUE.equals(actor.getStatus()) || !authorized)
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to view this project's credits");
 
         return carbonCreditBatchRepository
                 .findByProjectProjectId(projectId)
@@ -114,7 +123,7 @@ public class CarbonCreditBatchService {
         );
         response.setStatus(batch.getStatus());
         response.setIssuedDate(batch.getIssuedDate());
-        response.setPricePerCredit(10.0);
+        response.setPricePerCredit(null);
 
         if (batch.getProject() != null) {
 

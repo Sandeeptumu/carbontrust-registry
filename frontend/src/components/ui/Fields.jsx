@@ -13,9 +13,9 @@ function Field({ label, hint, error, required, id, children }) {
         </label>
       )}
       {children(fieldId)}
-      {hint && <div className="field__hint">{hint}</div>}
+      {hint && <div id={`${fieldId}-hint`} className="field__hint">{hint}</div>}
       {error && (
-        <div className="field__error" role="alert">
+        <div id={`${fieldId}-error`} className="field__error" role="alert">
           <AlertCircle size={13} />
           {error}
         </div>
@@ -39,6 +39,7 @@ export function Input({
         <input
           id={fieldId}
           className={`input ${error || invalid ? 'input--error' : ''} ${className}`.trim()}
+          aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
           aria-invalid={Boolean(error)}
           {...rest}
         />
@@ -55,6 +56,7 @@ export function Textarea({ label, hint, error, className = '', id, rows = 4, ...
           id={fieldId}
           rows={rows}
           className={`textarea ${error ? 'textarea--error' : ''} ${className}`.trim()}
+          aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
           aria-invalid={Boolean(error)}
           {...rest}
         />
@@ -70,6 +72,7 @@ export function Select({ label, hint, error, className = '', id, children, ...re
         <select
           id={fieldId}
           className={`select ${error ? 'select--error' : ''} ${className}`.trim()}
+          aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
           aria-invalid={Boolean(error)}
           {...rest}
         >

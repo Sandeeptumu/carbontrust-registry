@@ -1,129 +1,65 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError } from '../api/client'
-import { loginUser, registerUser, fetchCurrentUser } from '../api/auth'
-import {
-  getStoredUser,
-  getToken,
-  setToken,
-  setStoredUser,
-  clearSession,
-} from '../utils/storage'
+import { loginUser, registerUser, fetchCurrentUser, logoutUser } from '../api/auth'
 import { useToast } from './ToastContext'
 
 const AuthContext = createContext(null)
-
-const EVENT = 'carbontrust:session-expired'
-
 export function AuthProvider({ children }) {
   const navigate = useNavigate()
   const toast = useToast()
-  const [user, setUser] = useState(() => getStoredUser())
+  const sessionRevision = useRef(0)
+  const [user, setUser] = useState(null)
   const [ready, setReady] = useState(false)
-
-  const logout = useCallback(
-    (message, title = 'Signed out') => {
-      clearSession()
-      setUser(null)
-      setReady(true)
-      if (message) toast.info(message, title)
-      navigate('/login', { replace: true })
-    },
-    [navigate, toast],
-  )
-
-  // A 401/403 from any API call means the JWT is invalid/expired.
-  useEffect(() => {
-    const onExpired = () => logout('Your session has expired. Please sign in again.', 'Session expired')
-    window.addEventListener(EVENT, onExpired)
-    return () => window.removeEventListener(EVENT, onExpired)
-  }, [logout])
-
-  // Restore + validate the stored session once on boot.
-  useEffect(() => {
-    let cancelled = false
-    const bootstrap = async () => {
-      const token = getToken()
-      const stored = getStoredUser()
-      if (!token || !stored) {
-        if (!cancelled) setReady(true)
-        return
-      }
-      try {
-        const fresh = await fetchCurrentUser()
-        if (!cancelled) {
-          const next = {
-            userId: fresh.userId ?? stored.userId,
-            username: fresh.username ?? stored.username,
-            email: fresh.email ?? stored.email,
-            role: fresh.role ?? stored.role,
-          }
-          setUser(next)
-          setStoredUser(next)
-          setReady(true)
-        }
-      } catch (error) {
-        // Invalid token -> session-expired event logs out.
-        // Network error -> keep the optimistic session so the app still opens.
-        if (!cancelled && error instanceof ApiError && error.status === 0) {
-          setReady(true)
-        } else if (!cancelled && !(error instanceof ApiError)) {
-          setReady(true)
-        }
-      }
-    }
-    bootstrap()
-    return () => {
-      cancelled = true
-    }
+  const [sessionError, setSessionError] = useState(null)
+  const expire = useCallback(() => { sessionRevision.current += 1; setUser(null); setReady(true); navigate('/login', { replace: true }) }, [navigate])
+  const refreshSession = useCallback(async () => {
+    const revision = ++sessionRevision.current
+    try {
+      const fresh = await fetchCurrentUser()
+      if (revision !== sessionRevision.current) return
+      setUser(fresh)
+      setSessionError(null)
+    } catch (error) {
+      if (revision !== sessionRevision.current) return
+      if (error.status === 401 || error.status === 403) { setUser(null); setSessionError(null) }
+      else setSessionError(error)
+    } finally { if (revision === sessionRevision.current) setReady(true) }
   }, [])
-
-  const login = useCallback(
-    async (credentials) => {
-      const response = await loginUser(credentials)
-      const session = {
-        userId: response.userId,
-        username: response.username,
-        email: response.email,
-        role: response.role,
-      }
-      setToken(response.token)
-      setStoredUser(session)
-      setUser(session)
-      return session
-    },
-    [],
-  )
-
-  const register = useCallback(
-    async (payload) => {
-      await registerUser(payload)
-    },
-    [],
-  )
-
-  const value = useMemo(
-    () => ({
-      user,
-      isAuthenticated: Boolean(user),
-      ready,
-      login,
-      register,
-      logout,
-    }),
-    [user, ready, login, register, logout],
-  )
-
+  useEffect(() => {
+    // Discard legacy browser bearer credentials; identity is always restored from the server.
+    localStorage.removeItem('carbontrust.token')
+    localStorage.removeItem('carbontrust.user')
+    refreshSession()
+  }, [refreshSession])
+  useEffect(() => {
+    window.addEventListener('carbontrust:session-expired', expire)
+    return () => window.removeEventListener('carbontrust:session-expired', expire)
+  }, [expire])
+  useEffect(() => {
+    if (!user?.userId) return undefined
+    const refresh = () => { if (document.visibilityState !== 'hidden') refreshSession() }
+    window.addEventListener('focus', refresh)
+    window.addEventListener('carbontrust:permissions-changed', refresh)
+    const interval = window.setInterval(refresh, 30000)
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('carbontrust:permissions-changed', refresh)
+    }
+  }, [user?.userId, refreshSession])
+  const login = useCallback(async (credentials) => {
+    const session = await loginUser(credentials)
+    sessionRevision.current += 1
+    setUser(session); setReady(true); setSessionError(null)
+    return session
+  }, [])
+  const logout = useCallback(async (message) => {
+    try { await logoutUser(); expire(); if (message) toast.info(message, 'Signed out') }
+    catch (error) { toast.error(error.message || 'Sign out failed. Please try again.'); throw error }
+  }, [expire, toast])
+  const value = useMemo(() => ({ user, ready, sessionError, refreshSession, login, logout, register: registerUser, isAuthenticated: Boolean(user) }), [user, ready, sessionError, refreshSession, login, logout])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')

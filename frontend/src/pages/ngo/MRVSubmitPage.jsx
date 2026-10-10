@@ -21,6 +21,7 @@ export default function MRVSubmitPage() {
   const project = useAsync(useMemo(() => () => getProject(projectId), [projectId]))
 
   const [photoVerification, setPhotoVerification] = useState(false)
+  const [file, setFile] = useState(null)
   const [remarks, setRemarks] = useState('')
   const [fieldError, setFieldError] = useState(null)
   const [serverError, setServerError] = useState(null)
@@ -31,7 +32,12 @@ export default function MRVSubmitPage() {
 
   const submit = async (event) => {
     event.preventDefault()
+    if (submitting) return
     setServerError(null)
+    if (!file || file.size > 10 * 1024 * 1024 || !["application/pdf", "image/jpeg", "image/png"].includes(file.type)) {
+      setServerError("Choose a PDF, JPEG or PNG file up to 10 MB.")
+      return
+    }
     if (!remarks.trim()) {
       setFieldError('Please add remarks describing the evidence and site status for this reporting period.')
       return
@@ -39,7 +45,7 @@ export default function MRVSubmitPage() {
     setSubmitting(true)
     try {
       await createMRVSubmission(projectId, {
-        photoVerification,
+        photoVerification, file,
         remarks: remarks.trim(),
       })
       toast.success('Your MRV submission is now in the verifier queue.', 'MRV submitted')
@@ -93,6 +99,9 @@ export default function MRVSubmitPage() {
               </div>
             </div>
 
+            <label className="field__label" htmlFor="evidence">Evidence file (required, up to 10 MB)</label>
+            <input id="evidence" type="file" accept=".pdf,.jpg,.jpeg,.png" required disabled={submitting} onChange={(e) => setFile(e.target.files?.[0] || null)} className="mb-4" />
+
             <Checkbox
               label="Photo / spatial verification evidence available"
               hint="Confirm that on-site photographic or geospatial evidence was collected for this reporting period."
@@ -103,6 +112,7 @@ export default function MRVSubmitPage() {
             <Textarea
               label="Reporting remarks"
               rows={6}
+              maxLength={2000}
               value={remarks}
               onChange={(event) => {
                 setRemarks(event.target.value)

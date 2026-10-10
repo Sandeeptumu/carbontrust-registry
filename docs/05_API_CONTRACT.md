@@ -1,215 +1,42 @@
-# API Contract
+# API contract (2026-10-10)
 
-## Introduction
+JSON responses except authenticated evidence downloads; multipart MRV uploads. Backend validates inputs. No bearer JWT or provider login endpoints remain. All mutations require cookie + `X-XSRF-TOKEN` obtained from `GET /users/csrf`; public authentication mutations also require CSRF. CORS permits only APP_URL with credentials.
 
-The CarbonTrust Registry backend provides a set of REST APIs that support user registration, authentication, and secure access to protected resources.
-
-The API is built using Spring Boot, Spring Security, Spring Data JPA, MySQL, BCrypt password hashing, and JWT-based authentication.
-
----
-
-## API Base URL
-
-The backend API is currently available at:
-
-http://localhost:8080
-
-All API endpoints are accessed relative to this base URL.
-
----
-
-## User Registration
-
-The user registration API allows new users to create an account in the CarbonTrust Registry.
-
----
-
-## API Endpoints
-
-The CarbonTrust Registry backend currently provides the following REST API endpoints:
-
-| Method | Endpoint | Description | Authentication |
+| Method | Path | Request / result | Permission |
 |---|---|---|---|
-| POST | `/users/register` | Register a new user | Public |
-| POST | `/users/login` | Authenticate a user and generate a JWT token | Public |
-| GET | `/users/me` | Access a protected user endpoint | JWT Required |
+| GET | /users/csrf | `{token,headerName}` and HttpOnly CSRF cookie | Public |
+| POST | /users/register | `{username,email,password,passwordConfirmation}` → verification notice | Public, throttled; role input ignored |
+| POST | /users/login | `{email,password}` → `{userId,username,email,role,token:null}` and CT_SESSION cookie | Verified enabled account |
+| GET | /users/me | Current identity/role from database | Valid session |
+| POST | /users/logout | Revoke current session, expire cookie | CSRF |
+| POST | /users/forgot-password | `{email}` → generic eligibility notice | Public, throttled |
+| POST | /users/resend-verification | `{email}` → generic eligibility notice | Public, throttled |
+| POST | /users/verify-email | `{token}` → consume verification/email-change link | Public, throttled |
+| POST | /users/reset-password | `{token,password,passwordConfirmation}` | Public, throttled |
+| GET | /admin/users | Real accounts with username/email/createdAt/role/status/accountStatus/emailVerified | Admin |
+| PUT | /admin/users/{id}/role | `{role,expectedRole}` → updated account | Admin; stale writes 409; cannot remove last active admin |
+| PUT | /admin/users/{id}/status | `{status}` PENDING/APPROVED/ACTIVE/SUSPENDED | Admin; last-admin guard |
+| PUT | /admin/users/{id}/email | `{email}` → send new address verification, current address unchanged | Admin |
+| GET | /admin/users/{id}/audit | `[{id,userId,actorEmail,action,detail,createdAt}]` | Admin |
+| GET | /admin/stats, /admin/projects, /admin/credits, /admin/purchases, /admin/retirements | Database records/aggregates | Admin |
+| GET/POST | /projects | List own / create project | NGO (Admin can list all) |
+| GET/PUT/DELETE | /projects/{id} | Read / edit / delete own project | NGO ownership; Admin read; evidence-bearing project edits/deletes blocked pending amendment policy |
+| POST | /projects/{id}/mrv | multipart `file`, `remarks`, `photoVerification` | Active NGO owner |
+| GET | /projects/{id}/mrv | Submission metadata/history | Owner NGO / Admin |
+| GET | /mrv/{id}/evidence | Private attachment | Owner NGO, assigned Verifier, Admin |
+| GET | /mrv/{id}/verifications | Review history | Owner NGO, assigned Verifier, Admin |
+| GET | /admin/mrv | Submission queue | Admin |
+| PUT | /admin/mrv/{id}/assignment | `{verifierId}` | Admin; pending submissions only |
+| GET | /verifier/mrv?status=PENDING | Assigned submissions | Verifier |
+| POST | /verifier/mrv/{id}/verify | `{verificationStatus:APPROVED\|REJECTED,comments}` | Assigned Verifier; pending only; comments required |
+| GET | /verifier/verifications | Own review history | Verifier |
+| POST | /projects/{id}/carbon-credits | Existing quantity request DTO | Admin; verified project |
+| GET | /projects/{id}/carbon-credits | Issued batches | Owner NGO / Admin |
+| GET | /marketplace/credits, /marketplace/projects/{id} | Available batches / associated project details | User |
+| GET | /buyer/purchases, /buyer/retirements | Own history | User |
+| POST | /buyer/purchases/{id}/retire | Existing retirement request | User ownership; completed purchase and available balance |
+| POST | /buyer/carbon-credits/{id}/purchase | Unavailable until payment/pricing specification | User; no simulated success |
 
+Roles: `ADMIN`, `NGO`, `VERIFIER`, `HEALTHCARE_ASSISTANT`, `USER`. Browser route names `/buyer` remain backward-compatible while account role is USER. Healthcare business APIs are intentionally absent pending requirements.
 
-````markdown
-### POST /users/register
-
-Registers a new user in the CarbonTrust Registry.
-
-```http
-POST /users/register
-```
-
-### Purpose
-
-The registration API:
-
-- Accepts user registration details
-- Validates the submitted information
-- Checks whether the email is already registered
-- Checks whether the username is already taken
-- Encrypts the user's password using BCrypt
-- Creates the user in the database
-- Assigns the default `BUYER` role
-
-### Request Body
-
-```json
-{
-  "firstName": "Sandeep",
-  "lastName": "Test",
-  "username": "valid_user_001",
-  "email": "valid.user001@carbontrust.com",
-  "phoneNumber": "9999999999",
-  "address": "Hyderabad",
-  "password": "Test@123",
-  "dateOfBirth": "2005-01-01"
-}
-```
----
-
-### POST /users/login
-
-Authenticates an existing user and generates a JWT token.
-
-```http
-POST /users/login
-```
-
-### Purpose
-
-The login API:
-
-- Accepts the user's email and password
-- Checks whether the user exists
-- Verifies the password using BCrypt
-- Generates a JWT token after successful authentication
-- Returns the user's basic information along with the JWT token
-
-### Request Body
-
-```json
-{
-  "email": "valid.user001@carbontrust.com",
-  "password": "Test@123"
-}
-```
-
-### Authentication
-
-No authentication is required for login.
-
-### Successful Response
-
-```text
-200 OK
-```
-
-Example response:
-
-```json
-{
-  "userId": 8,
-  "username": "valid_user_001",
-  "email": "valid.user001@carbontrust.com",
-  "role": "BUYER",
-  "token": "eyJhbGciOiJIUzI1NiJ9..."
-}
-```
-
-The JWT token returned by the login API is used to access protected endpoints.
-
-### Invalid Credentials
-
-If the email or password is incorrect:
-
-```text
-401 Unauthorized
-```
-
-```json
-{
-  "message": "Invalid email or password"
-}
-```
-
----
-
-### GET /users/me
-
-Accesses a protected user endpoint and verifies JWT authentication.
-
-```http
-GET /users/me
-```
-
-### Purpose
-
-The `/users/me` endpoint is currently used to verify that:
-
-- A JWT token is provided
-- The JWT token is valid
-- The JWT authentication filter processes the token
-- Spring Security authenticates the request
-- The protected endpoint can be accessed
-
-### Authentication
-
-A valid JWT token is required.
-
-The token must be sent using the `Authorization` header:
-
-```http
-Authorization: Bearer <JWT_TOKEN>
-```
-
-### Successful Response
-
-```text
-200 OK
-```
-
-```text
-You are authenticated!
-```
-
-### Without Authentication
-
-If the request does not contain a valid JWT token:
-
-```text
-403 Forbidden
-```
-
-The request is rejected by Spring Security.
-
-### Authentication Flow
-
-```text
-POST /users/login
-        |
-        v
-JWT Token Generated
-        |
-        v
-Client sends JWT
-        |
-        v
-GET /users/me
-        |
-        v
-JwtAuthenticationFilter
-        |
-        v
-JWT Validation
-        |
-        v
-Spring Security
-        |
-        v
-Access Granted
-```
+Errors: 400 invalid request/link/business transition, 401 no valid session/incorrect credentials, 403 insufficient access/CSRF/unverified or disabled login, 404 missing record/file, 409 duplicate/stale edit, 413 oversized upload, 429 throttled, 503 mail unavailable. No passwords or raw stored token hashes are returned. CSRF can rotate; fetch a fresh token before each mutation.

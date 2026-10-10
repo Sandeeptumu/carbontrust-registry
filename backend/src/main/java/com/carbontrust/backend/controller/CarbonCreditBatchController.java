@@ -25,7 +25,7 @@ public class CarbonCreditBatchController {
     @PostMapping("/{projectId}/carbon-credits")
     public ResponseEntity<CarbonCreditBatchResponse> issueCredits(
             @PathVariable Long projectId,
-            @Valid @RequestBody CarbonCreditBatchRequest request
+            @Valid @RequestBody CarbonCreditBatchRequest request, org.springframework.security.core.Authentication auth
     ) {
 
 
@@ -34,18 +34,18 @@ public class CarbonCreditBatchController {
                 .body(
                         carbonCreditBatchService.issueCredits(
                                 projectId,
-                                request
+                                request, auth.getName()
                         )
                 );
     }
 
     @GetMapping("/{projectId}/carbon-credits")
     public ResponseEntity<List<CarbonCreditBatchResponse>> getProjectCredits(
-            @PathVariable Long projectId
+            @PathVariable Long projectId, org.springframework.security.core.Authentication auth
     ) {
 
         return ResponseEntity.ok(
-                carbonCreditBatchService.getProjectCredits(projectId)
+                carbonCreditBatchService.getProjectCredits(projectId, auth.getName())
         );
     }
 }

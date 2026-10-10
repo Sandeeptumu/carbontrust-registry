@@ -21,10 +21,11 @@ public class MRVSubmissionController {
         this.mrvSubmissionService = mrvSubmissionService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public MRVSubmissionResponse createMRVSubmission(
             @PathVariable Long projectId,
-            @RequestBody @Valid MRVSubmissionRequest request,
+            @ModelAttribute @Valid MRVSubmissionRequest request,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             Authentication authentication
     ) {
 
@@ -32,7 +33,7 @@ public class MRVSubmissionController {
 
         return mrvSubmissionService.createMRVSubmission(
                 projectId,
-                request,
+                request, file,
                 email
         );
     }

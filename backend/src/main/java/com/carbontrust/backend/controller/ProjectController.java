@@ -30,15 +30,15 @@ public class ProjectController {
     }
 
     @GetMapping
-    public List<ProjectResponse> getAllProjects() {
-        return projectService.getAllProjects();
+    public List<ProjectResponse> getAllProjects(Authentication authentication) {
+        return projectService.getMyProjects(authentication.getName());
     }
 
     @GetMapping("/{projectId}")
     public ProjectResponse getProjectById(
-            @PathVariable Long projectId
+            @PathVariable Long projectId, Authentication authentication
     ) {
-        return projectService.getProjectById(projectId);
+        return projectService.getOwnedProject(projectId, authentication.getName());
     }
 
     @PutMapping("/{projectId}")

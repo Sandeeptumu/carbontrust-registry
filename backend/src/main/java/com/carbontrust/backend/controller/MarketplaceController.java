@@ -35,6 +35,6 @@ public class MarketplaceController {
     public ProjectResponse getProject(
             @PathVariable Long projectId
     ) {
-        return projectService.getProjectById(projectId);
+        return projectService.getMarketplaceProject(projectId);
     }
 }

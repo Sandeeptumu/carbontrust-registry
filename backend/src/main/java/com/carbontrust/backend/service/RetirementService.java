@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class RetirementService {
 
     private final CarbonCreditRetirementRepository retirementRepository;
@@ -31,6 +32,7 @@ public class RetirementService {
         this.userRepository = userRepository;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public RetirementResponse retireCredits(
             Long purchaseId,
             RetirementRequest request,
@@ -42,14 +44,14 @@ public class RetirementService {
                         new ResourceNotFoundException("Buyer not found")
                 );
 
-        if (!"BUYER".equals(buyer.getRole())) {
+        if (!"USER".equals(buyer.getRole()) || !Boolean.TRUE.equals(buyer.getStatus())) {
             throw new BusinessException(
                     "Only buyers can retire carbon credits"
             );
         }
 
         Purchase purchase =
-                purchaseRepository.findById(purchaseId)
+                purchaseRepository.findLockedById(purchaseId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Purchase not found"
@@ -63,6 +65,9 @@ public class RetirementService {
                     "You can only retire credits from your own purchase"
             );
         }
+
+        if (!"COMPLETED".equals(purchase.getPaymentStatus())) throw new BusinessException("Only completed purchases can be retired");
+        if (request.getQuantity() == null || !Double.isFinite(request.getQuantity()) || request.getQuantity() <= 0) throw new BusinessException("Quantity must be positive and finite");
 
         Double alreadyRetired =
                 retirementRepository
@@ -104,7 +109,7 @@ public class RetirementService {
                         new ResourceNotFoundException("Buyer not found")
                 );
 
-        if (!"BUYER".equals(buyer.getRole())) {
+        if (!"USER".equals(buyer.getRole()) || !Boolean.TRUE.equals(buyer.getStatus())) {
             throw new BusinessException(
                     "Only buyers can view retirement records"
             );

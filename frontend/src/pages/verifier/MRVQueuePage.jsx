@@ -13,7 +13,7 @@ import EmptyState, { ErrorState } from '../../components/ui/EmptyState'
 import { SkeletonList } from '../../components/ui/Loaders'
 import { useAsync } from '../../hooks/useAsync'
 import { useToast } from '../../context/ToastContext'
-import { verifierSubmissions, verifyMRV } from '../../api/mrv'
+import { verifierSubmissions, verifyMRV, downloadEvidence, mrvVerifications } from '../../api/mrv'
 import { MRV_STATUS, PROJECT_STATUS, ecosystemMeta } from '../../utils/status'
 import EcosystemGlyph from '../../components/EcosystemGlyph'
 import { formatDateTime } from '../../utils/format'
@@ -31,16 +31,18 @@ function ReviewModal({ submission, onClose, onDecided }) {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
+  const history = useAsync(useMemo(() => () => submission ? mrvVerifications(submission.mrvId) : Promise.resolve([]), [submission]))
   const eco = submission ? ecosystemMeta(submission.ecosystemType) : null
 
   const submitDecision = async () => {
+    if (busy || submission.mrvStatus !== "PENDING") return
     setError(null)
     if (!decision) {
       setError('Choose APPROVED or REJECTED to continue.')
       return
     }
-    if (decision === 'REJECTED' && !comments.trim()) {
-      setError('A rejection must include comments explaining the reason.')
+    if (!comments.trim()) {
+      setError('Every decision must include review comments.')
       return
     }
     setBusy(true)
@@ -99,7 +101,8 @@ function ReviewModal({ submission, onClose, onDecided }) {
             </div>
 
             <div className="card mt-3" style={{ padding: '16px 18px' }}>
-              <div className="section-title mb-3">Verifier remarks</div>
+              <div className="section-title mb-3">NGO reporting remarks</div>
+              {submission.fileName ? <Button size="sm" onClick={() => downloadEvidence(submission).catch(e => setError(e.message))}>Download {submission.fileName}</Button> : <p>No file is available for this historical submission.</p>}
               <p className="text-sm ink-soft" style={{ lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
                 {submission.remarks || 'No remarks were provided by the NGO.'}
               </p>
@@ -107,6 +110,8 @@ function ReviewModal({ submission, onClose, onDecided }) {
           </div>
 
           <div>
+            {history.loading ? <p>Loading review history…</p> : history.error ? <p role="alert">{history.error.message}</p> : (history.data || []).map(v => <div className="card mb-3" key={v.verificationId}><strong>{v.verificationStatus}</strong><p>{v.comments}</p><small>{v.verifierUsername} · {formatDateTime(v.verificationDate)}</small></div>)}
+            {submission.mrvStatus === 'PENDING' && <>
             <span className="field__label">Your decision</span>
             <div className="row mt-2" style={{ gap: 10 }}>
               <button
@@ -129,7 +134,8 @@ function ReviewModal({ submission, onClose, onDecided }) {
 
             <div className="mt-4">
               <Textarea
-                label={decision === 'REJECTED' ? 'Comments (required for rejection)' : 'Verification comments (optional)'}
+                label="Verification comments (required)"
+                maxLength={2000}
                 rows={5}
                 value={comments}
                 onChange={(event) => setComments(event.target.value)}
@@ -158,6 +164,8 @@ function ReviewModal({ submission, onClose, onDecided }) {
             <Button block className="mt-4" size="lg" onClick={submitDecision} loading={busy} icon={decision === 'APPROVED' ? ShieldCheck : decision === 'REJECTED' ? XCircle : ClipboardList}>
               {busy ? 'Recording…' : `Record ${decision || 'decision'}`}
             </Button>
+            </>}
+            {submission.mrvStatus !== "PENDING" && error && <p role="alert">{error}</p>}
           </div>
         </div>
       )}
@@ -213,7 +221,7 @@ export default function MRVQueuePage() {
               title={filter === 'PENDING' ? 'Queue is clear' : `No ${filter.toLowerCase()} submissions`}
               description={
                 filter === 'PENDING'
-                  ? 'New MRV submissions from NGOs will appear here as they are uploaded.'
+                  ? 'Submissions appear here when an administrator assigns them to you.'
                   : 'Submissions you have reviewed under this status will be listed here.'
               }
             />
@@ -261,6 +269,7 @@ export default function MRVQueuePage() {
       </div>
 
       <ReviewModal
+        key={reviewing?.mrvId || "closed"}
         submission={reviewing}
         onClose={() => setReviewing(null)}
         onDecided={refetch}

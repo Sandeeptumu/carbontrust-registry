@@ -108,7 +108,7 @@ export default function BuyerDashboard() {
   return (
     <PageTransition>
       <PageHeader
-        eyebrow="Buyer overview"
+        eyebrow="User overview"
         title={`Welcome back, ${user?.username}`}
         subtitle="Track your portfolio of verified carbon credits — from purchase to permanent retirement."
         actions={
@@ -259,10 +259,8 @@ export default function BuyerDashboard() {
                 </div>
                 <div className="divider" />
                 <p className="text-sm ink-soft">
-                  Retiring {formatNumber(Math.max(1, totals.retired))} credit{Math.max(1, totals.retired) > 1 ? 's' : ''} keeps roughly{' '}
-                  <strong>{formatNumber(Math.round(totals.retired * 24))} kg</strong> of CO₂e out of the
-                  atmosphere — equivalent to the annual sequestration of about{' '}
-                  <strong>{formatNumber(Math.round(totals.retired * 1.7))} mature trees</strong>.
+                  Your retirement history records credits permanently removed from circulation.
+                  Each credit represents one tonne of CO₂ equivalent.
                 </p>
                 <Button to="/buyer/retirements" variant="secondary" icon={Recycle} className="mt-4" style={{ marginTop: 16 }}>
                   View retirement certificates

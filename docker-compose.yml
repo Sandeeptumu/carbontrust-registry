@@ -1,53 +1,68 @@
 services:
-
   mysql:
     image: mysql:8.0
-    container_name: carbontrust-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: carbontrust
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-carbontrust-db-password}
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: ${DB_NAME:-carbontrust}
+      MYSQL_USER: ${DB_USERNAME:-carbontrust}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+      - ./deploy/restrict-runtime-user.sh:/docker-entrypoint-initdb.d/10-restrict-runtime-user.sh:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:-carbontrust-db-password}"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -uroot --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
-      start_period: 30s
-
-  backend:
-    build:
-      context: ./backend
-    container_name: carbontrust-backend
-    restart: unless-stopped
+  migrate:
+    build: ./backend
+    restart: "no"
     depends_on:
       mysql:
         condition: service_healthy
+    command: ["--spring.main.web-application-type=none", "--spring.profiles.active=migrate"]
     environment:
       DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: carbontrust
-      DB_USERNAME: root
-      DB_PASSWORD: ${DB_PASSWORD:-carbontrust-db-password}
-      JWT_SECRET: ${JWT_SECRET:-carbontrust-super-secret-key-for-jwt-2026}
-      JWT_EXPIRATION: 3600000
-    ports:
-      - "8080:8080"
-
+      DB_NAME: ${DB_NAME:-carbontrust}
+      DB_USERNAME: ${FLYWAY_USER:?Set FLYWAY_USER}
+      DB_PASSWORD: ${FLYWAY_PASSWORD:?Set FLYWAY_PASSWORD}
+      APP_URL: ${APP_URL:?Set APP_URL}
+      MAIL_FROM: ${MAIL_FROM:?Set MAIL_FROM}
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+      # Only the isolated Docker network may supply forwarding headers; backend has no published port.
+      SERVER_TOMCAT_REMOTEIP_INTERNAL_PROXIES: '172\.(1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}\.[0-9]{1,3}'
+      DB_HOST: mysql
+      DB_NAME: ${DB_NAME:-carbontrust}
+      DB_USERNAME: ${DB_USERNAME:-carbontrust}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      SPRING_FLYWAY_ENABLED: "false"
+      APP_URL: ${APP_URL:?Set APP_URL}
+      SECURE_COOKIES: ${SECURE_COOKIES:-true}
+      MAIL_FROM: ${MAIL_FROM:?Set MAIL_FROM}
+      SMTP_HOST: ${SMTP_HOST:?Set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_TLS: ${SMTP_TLS:-true}
   frontend:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: http://localhost:8080
-    container_name: carbontrust-frontend
+        VITE_API_URL: ""
     restart: unless-stopped
     depends_on:
       - backend
     ports:
-      - "3000:80"
-
+      - "127.0.0.1:3000:80"
 volumes:
   mysql_data:
