@@ -20,6 +20,11 @@ FROM eclipse-temurin:17-jre AS runtime
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
+COPY certs/aiven-ca.pem /app/certs/aiven-ca.pem
+# Public CA certificate only. The truststore contains no private keys or credentials.
+RUN keytool -importcert -noprompt -alias carbontrust-aiven \
+    -file /app/certs/aiven-ca.pem -keystore /app/aiven-truststore.p12 \
+    -storetype PKCS12 -storepass changeit
 
 EXPOSE 8080
 
