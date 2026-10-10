@@ -1,18 +1,16 @@
 # ---------- Build stage ----------
-FROM eclipse-temurin:17-jdk AS build
+FROM maven:3.9.16-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copy Maven wrapper + POM first for better layer caching
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-RUN chmod +x mvnw
+# Use the image's Maven installation so cloud builds do not bootstrap Maven.
+COPY pom.xml ./
 
 # Best-effort dependency pre-download for layer caching
-RUN ./mvnw -B -q dependency:go-offline || true
+RUN mvn -B -q dependency:go-offline || true
 
 COPY src/ src/
-RUN ./mvnw -B clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
 # ---------- Runtime stage ----------
 FROM eclipse-temurin:17-jre AS runtime
