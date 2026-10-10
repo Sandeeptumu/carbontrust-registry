@@ -44,11 +44,11 @@ class AccountFlowTests {
  }
  HttpResponse<String> post(String path,String body)throws Exception{return call(client,"POST",path,body,true);}
  void signup()throws Exception {var r=post("/users/register","{\"username\":\"forest\",\"email\":\"FOREST@example.test\",\"password\":\"LongPassword123!\",\"passwordConfirmation\":\"LongPassword123!\",\"role\":\"ADMIN\"}");assertEquals(200,r.statusCode(),r.body());}
- void verifyEmail()throws Exception {assertEquals(200,post("/users/verify-email","{\"token\":\""+mailedToken+"\"}").statusCode());}
+ void verifyEmail()throws Exception {if(mailedToken==null) userService.requestLink("forest@example.test","VERIFY");assertEquals(200,post("/users/verify-email","{\"token\":\""+mailedToken+"\"}").statusCode());}
  HttpResponse<String> login()throws Exception{return post("/users/login","{\"email\":\"forest@example.test\",\"password\":\"LongPassword123!\"}");}
  @Test void fullEmailSessionAndRoleLifecycle()throws Exception {
   signup();User u=users.findByEmail("forest@example.test").orElseThrow();assertEquals("USER",u.getRole());assertFalse(u.getEmailVerified());assertNotEquals("LongPassword123!",u.getPassword());
-  assertEquals(403,login().statusCode());String verification=mailedToken;verifyEmail();
+  assertEquals(200,login().statusCode());verifyNoInteractions(mailer);verifyEmail();String verification=mailedToken;
   assertEquals(400,post("/users/verify-email","{\"token\":\""+verification+"\"}").statusCode());
   var logged=login();assertEquals(200,logged.statusCode(),logged.body());assertTrue(logged.headers().firstValue("set-cookie").orElseThrow().contains("HttpOnly"));assertTrue(logged.body().contains("\"token\":null"));
   assertEquals(200,call(client,"GET","/users/me",null,false).statusCode());assertEquals(403,call(client,"GET","/admin/users",null,false).statusCode());
@@ -69,14 +69,14 @@ class AccountFlowTests {
   assertEquals(403,call(client,"POST","/users/login","{}",false).statusCode());
   assertEquals(400,post("/users/register","{\"username\":\"x\",\"email\":\"invalid\",\"password\":\"short\",\"passwordConfirmation\":\"no\"}").statusCode());
   signup();assertEquals(409,post("/users/register","{\"username\":\"forest2\",\"email\":\"forest@example.test\",\"password\":\"LongPassword123!\",\"passwordConfirmation\":\"LongPassword123!\"}").statusCode());
-  var t=tokens.findAll().get(0);t.setExpiresAt(Instant.now().minusSeconds(1));tokens.save(t);
+  userService.requestLink("forest@example.test","VERIFY");var t=tokens.findAll().get(0);t.setExpiresAt(Instant.now().minusSeconds(1));tokens.save(t);
   assertEquals(400,post("/users/verify-email","{\"token\":\""+mailedToken+"\"}").statusCode());
   int code=0;for(int i=0;i<11;i++)code=post("/users/login","{\"email\":\"nobody@example.test\",\"password\":\"InvalidPassword123!\"}").statusCode();assertEquals(429,code);
  }
- @Test void smtpFailureRollsBackSignup()throws Exception {
+ @Test void smtpFailureDoesNotBlockSignup()throws Exception {
   doThrow(new org.springframework.mail.MailSendException("unavailable")).when(mailer).sendLink(anyString(),anyString(),anyString());
   var r=post("/users/register","{\"username\":\"forest\",\"email\":\"forest@example.test\",\"password\":\"LongPassword123!\",\"passwordConfirmation\":\"LongPassword123!\"}");
-  assertEquals(503,r.statusCode());assertFalse(users.existsByEmail("forest@example.test"));
+  assertEquals(200,r.statusCode());assertTrue(users.existsByEmail("forest@example.test"));verifyNoInteractions(mailer);assertEquals(200,login().statusCode());assertEquals(200,call(client,"GET","/users/me",null,false).statusCode());assertEquals(403,call(client,"GET","/admin/users",null,false).statusCode());
  }
  @Test void sessionExpiryAndSuspensionRejectDirectRequests()throws Exception {
   signup();verifyEmail();assertEquals(200,login().statusCode());

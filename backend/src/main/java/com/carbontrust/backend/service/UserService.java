@@ -28,7 +28,7 @@ public class UserService {
  }
  public static String normalizeEmail(String email) { return email.trim().toLowerCase(Locale.ROOT); }
  public static boolean active(User u) {
-  return Boolean.TRUE.equals(u.getStatus()) && Boolean.TRUE.equals(u.getEmailVerified())
+  return Boolean.TRUE.equals(u.getStatus())
     && ("ACTIVE".equals(u.getAccountStatus()) || "APPROVED".equals(u.getAccountStatus()));
  }
  @Transactional public User registerUser(UserRegistrationRequest request) {
@@ -37,9 +37,8 @@ public class UserService {
   if(users.existsByEmail(email)) throw new DuplicateResourceException("Email already registered. Sign in or reset your password.");
   if(users.existsByUsername(request.getUsername())) throw new DuplicateResourceException("Username already taken");
   User u=new User();u.setUsername(request.getUsername());u.setEmail(email);u.setPassword(encoder.encode(request.getPassword()));
-  u.setRole("USER");u.setStatus(false);u.setAccountStatus("PENDING");u.setEmailVerified(false);
+  u.setRole("USER");u.setStatus(true);u.setAccountStatus("ACTIVE");u.setEmailVerified(false);
   users.saveAndFlush(u);
-  issueLink(u,"VERIFY",email);
   audit.record(u.getUserId(),email,"REGISTER","Account registered with User role");
   return u;
  }
@@ -53,7 +52,7 @@ public class UserService {
   boolean valid=encoder.matches(request.getPassword(),u==null || u.getPassword()==null ? dummyHash:u.getPassword());
   if(u==null || !valid) throw new ExternalAuthException(401,"INVALID_CREDENTIALS","Invalid email or password");
 
-  if(!active(u)) throw new ExternalAuthException(403,"ACCOUNT_UNAVAILABLE","Verify your email or contact an administrator about your account status.");
+  if(!active(u)) throw new ExternalAuthException(403,"ACCOUNT_UNAVAILABLE","Contact an administrator about your account status.");
   String raw=Secrets.token();AuthSession s=new AuthSession();s.setTokenHash(Secrets.hash(raw));s.setUser(u);s.setExpiresAt(Instant.now().plus(8,ChronoUnit.HOURS));sessions.save(s);
   return new UserLoginResponse(u.getUserId(),u.getUsername(),u.getEmail(),u.getRole(),raw);
  }

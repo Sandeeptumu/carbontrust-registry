@@ -37,6 +37,5 @@ export default function LoginPage() {
       <Button type="submit" block size="lg" loading={busy}>Sign in</Button>
     </form>
     <div className="auth-foot">New to CarbonTrust? <Link to="/register">Create an account</Link></div>
-    <div className="auth-foot"><Link to="/resend-verification">Resend verification email</Link></div>
   </div></AuthLayout>
 }

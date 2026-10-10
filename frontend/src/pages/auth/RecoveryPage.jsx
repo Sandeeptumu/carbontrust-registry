@@ -33,6 +33,11 @@ export default function RecoveryPage({ mode }) {
     } catch (err) { setError(err.message || 'Could not complete the request. Please try again.') }
     finally { setBusy(false) }
   }
+  if (mode === 'forgot' || mode === 'resend') return <AuthLayout><div className="auth-card">
+    <h1 className="auth-title">{mode === 'forgot' ? 'Password recovery unavailable' : 'Sign in directly'}</h1>
+    <p className="auth-sub">{mode === 'forgot' ? 'Email delivery is currently unavailable, so password-reset links cannot be sent. Contact your administrator for help.' : 'Email verification is not required. You can sign in with your email and password.'}</p>
+    <div className="auth-foot"><Link to="/login">Back to sign in</Link></div>
+  </div></AuthLayout>
   return <AuthLayout><div className="auth-card">
     <div className="auth-eyebrow">Account security</div>
     <h1 className="auth-title">{TITLES[mode]}</h1>

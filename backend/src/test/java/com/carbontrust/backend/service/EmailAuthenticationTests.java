@@ -14,11 +14,17 @@ class EmailAuthenticationTests {
     @Test void registrationCannotGrantPrivileges() {
         UserRepository users = mock(UserRepository.class);
         when(users.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
-        UserService service = new UserService(users, new BCryptPasswordEncoder(), mock(AuthSessionRepository.class), mock(EmailTokenRepository.class), mock(AccountMailer.class), mock(AccountAuditService.class));
+        AccountMailer mailer = mock(AccountMailer.class);
+        UserService service = new UserService(users, new BCryptPasswordEncoder(), mock(AuthSessionRepository.class), mock(EmailTokenRepository.class), mailer, mock(AccountAuditService.class));
         UserRegistrationRequest request = new UserRegistrationRequest();
         request.setPasswordConfirmation("LongPassword123!"); request.setUsername("forest"); request.setEmail("FOREST@example.test"); request.setPassword("LongPassword123!");
         User saved = service.registerUser(request);
         assertEquals("USER", saved.getRole());
+        assertTrue(UserService.active(saved));
+        assertFalse(saved.getEmailVerified());
+        verifyNoInteractions(mailer);
+        saved.setStatus(false);
+        assertFalse(UserService.active(saved));
         assertEquals("forest@example.test", saved.getEmail());
         assertNotEquals(request.getPassword(), saved.getPassword());
     }

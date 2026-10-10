@@ -27,7 +27,7 @@ export default function RegisterPage() {
     setBusy(true)
     try {
       const result = await register({ ...values, username: values.username.trim(), email: values.email.trim() })
-      setSuccess(result?.message || 'Check your email for a verification link before signing in.')
+      setSuccess(result?.message || 'Account created. You can now sign in.')
       setValues({ ...values, password: '', passwordConfirmation: '' })
     } catch (err) { setError(err.message); setErrors(err.fieldErrors || {}) }
     finally { setBusy(false) }
@@ -47,6 +47,5 @@ export default function RegisterPage() {
       <p className="auth-helper">Your account starts with User access. An administrator manages elevated roles and account approval.</p>
     </form>}
     <div className="auth-foot">Already have an account? <Link to="/login">Sign in</Link></div>
-    {success && <div className="auth-foot"><Link to="/resend-verification">Resend verification email</Link></div>}
   </div></AuthLayout>
 }

@@ -26,7 +26,7 @@ public class UserController {
  }
  @GetMapping("/csrf") public Map<String,String> csrf(CsrfToken token) {return Map.of("token",token.getToken(),"headerName",token.getHeaderName());}
  @PostMapping("/register") public Map<String,String> register(@Valid @RequestBody UserRegistrationRequest body,HttpServletRequest request) {
-  limit(request,body.getEmail());users.registerUser(body);return Map.of("message","Account created. Check your email to verify your account.");
+  limit(request,body.getEmail());users.registerUser(body);return Map.of("message","Account created. You can now sign in.");
  }
  @PostMapping("/login") public UserLoginResponse login(@Valid @RequestBody UserLoginRequest body,HttpServletRequest request,HttpServletResponse response) {
   limit(request,body.getEmail());var session=users.loginUser(body);
