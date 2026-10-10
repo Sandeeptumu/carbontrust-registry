@@ -11,7 +11,7 @@ import { useAsync } from '../../hooks/useAsync'
 import { marketplaceCredits } from '../../api/credits'
 import PurchaseModal from '../../components/credits/PurchaseModal'
 import EcosystemGlyph, { EcosystemTile } from '../../components/EcosystemGlyph'
-import { formatCurrency, formatNumber, formatDate } from '../../utils/format'
+import { formatNumber, formatDate } from '../../utils/format'
 
 const ECOSYSTEMS = ['All ecosystems', 'MANGROVE', 'SEAGRASS', 'SALT MARSH']
 
@@ -61,10 +61,10 @@ function CreditCardView({ credit, index, onBuy }) {
 
         <div className="row row--between">
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, color: 'var(--ink)' }}>
-              {formatCurrency(credit.pricePerCredit)}
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 16, color: 'var(--ink)' }}>
+              Pricing pending
             </div>
-            <div className="muted text-xs">per credit · 1 tCO₂e</div>
+            <div className="muted text-xs">1 credit = 1 tCO₂e</div>
           </div>
           <div className="text-right">
             <div className="bold" style={{ fontSize: 15 }}>{formatNumber(credit.availableQuantity)}</div>
@@ -88,7 +88,7 @@ function CreditCardView({ credit, index, onBuy }) {
 
         <div className="row" style={{ marginTop: 'auto' }}>
           <Button block icon={ArrowUpRight} onClick={() => onBuy(credit)}>
-            View & buy
+            View project
           </Button>
         </div>
       </div>
@@ -119,7 +119,6 @@ export default function MarketplacePage() {
     }
     const sorted = [...list]
     if (sort === 'newest') sorted.sort((a, b) => new Date(b.issuedDate) - new Date(a.issuedDate))
-    if (sort === 'price-low') sorted.sort((a, b) => a.pricePerCredit - b.pricePerCredit)
     if (sort === 'available') sorted.sort((a, b) => b.availableQuantity - a.availableQuantity)
     return sorted
   }, [data, ecosystem, query, sort])
@@ -209,7 +208,6 @@ export default function MarketplacePage() {
                 onChange={(event) => setSort(event.target.value)}
               >
                 <option value="newest">Newest first</option>
-                <option value="price-low">Lowest price</option>
                 <option value="available">Most available</option>
               </select>
             </div>
@@ -234,10 +232,10 @@ export default function MarketplacePage() {
       )}
 
       <PurchaseModal
+        key={selected?.ccbId || 'none'}
         batch={selected}
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        onPurchased={() => run()}
       />
     </PageTransition>
   )

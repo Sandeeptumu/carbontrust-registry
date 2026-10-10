@@ -29,9 +29,9 @@ public class VerifierWorkspaceController {
 
     @GetMapping("/mrv")
     public List<VerifierSubmissionResponse> getMRVSubmissions(
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status, Authentication authentication
     ) {
-        return mrvSubmissionService.getAllSubmissions(status);
+        return mrvSubmissionService.getAllSubmissions(status, authentication.getName());
     }
 
     @GetMapping("/verifications")

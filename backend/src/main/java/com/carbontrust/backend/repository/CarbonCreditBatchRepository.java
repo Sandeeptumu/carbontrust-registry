@@ -9,6 +9,8 @@ import java.util.List;
 @Repository
 public interface CarbonCreditBatchRepository
         extends JpaRepository<CarbonCreditBatch, Long> {
+    boolean existsByProjectProjectId(Long projectId);
+
 
     List<CarbonCreditBatch> findByProjectProjectId(Long projectId);
 

@@ -1,16 +1,9 @@
 import { api } from './client'
-
-/** POST /users/register — always creates a BUYER account. */
-export function registerUser(payload) {
-  return api.post('/users/register', payload, { auth: false })
-}
-
-/** POST /users/login -> { userId, username, email, role, token } */
-export function loginUser(payload) {
-  return api.post('/users/login', payload, { auth: false })
-}
-
-/** GET /users/me -> { userId, username, email, role } */
-export function fetchCurrentUser() {
-  return api.get('/users/me')
-}
+export const registerUser = (payload) => api.post('/users/register', payload, { auth: false })
+export const loginUser = (payload) => api.post('/users/login', payload, { auth: false })
+export const fetchCurrentUser = () => api.get('/users/me', { auth: false })
+export const logoutUser = () => api.post('/users/logout', {})
+export const forgotPassword = (email) => api.post('/users/forgot-password', { email }, { auth: false })
+export const resendVerification = (email) => api.post('/users/resend-verification', { email }, { auth: false })
+export const resetPassword = (payload) => api.post('/users/reset-password', payload, { auth: false })
+export const verifyEmail = (token) => api.post('/users/verify-email', { token }, { auth: false })

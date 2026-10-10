@@ -23,3 +23,13 @@ export function adminPurchases() {
 export function adminRetirements() {
   return api.get('/admin/retirements')
 }
+
+export function updateUserRole(userId, role, expectedRole) {
+  return api.put(`/admin/users/${userId}/role`, { role, expectedRole })
+}
+
+export const updateUserStatus = (id, status) => api.put(`/admin/users/${id}/status`, { status })
+export const updateUserEmail = (id, email) => api.put(`/admin/users/${id}/email`, { email })
+export const userAudit = (id) => api.get(`/admin/users/${id}/audit`)
+export const adminMRV = () => api.get('/admin/mrv')
+export const assignMRV = (id, verifierId) => api.put(`/admin/mrv/${id}/assignment`, { verifierId })

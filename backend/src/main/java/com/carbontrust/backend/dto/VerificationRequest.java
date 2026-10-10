@@ -23,5 +23,6 @@ public class VerificationRequest {
             max = 2000,
             message = "Comments cannot exceed 2000 characters"
     )
+    @NotBlank(message = "Comments are required for every verification")
     private String comments;
 }

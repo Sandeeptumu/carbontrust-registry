@@ -53,6 +53,7 @@ mobile/.expo-shared/
 node_modules/
 target/
 dist/
+.vercel/
 
 # Editor directories
 .vscode/

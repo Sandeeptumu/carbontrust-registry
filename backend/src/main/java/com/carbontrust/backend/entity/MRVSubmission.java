@@ -23,6 +23,20 @@ public class MRVSubmission {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_verifier_id")
+    private User assignedVerifier;
+
+    private String fileName;
+    private String contentType;
+    private Long fileSize;
+    private String sha256;
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] evidence;
+
     @CreationTimestamp
     private LocalDateTime uploadDate;
 

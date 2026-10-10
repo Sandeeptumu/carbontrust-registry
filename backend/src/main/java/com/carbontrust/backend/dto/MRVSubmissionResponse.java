@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class MRVSubmissionResponse {
 
+    private String fileName;
+    private String contentType;
+    private Long fileSize;
+    private String sha256;
+    private Long assignedVerifierId;
     private Long mrvId;
 
     private Long projectId;

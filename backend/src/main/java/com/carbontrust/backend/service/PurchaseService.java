@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class PurchaseService {
 
     private final PurchaseRepository purchaseRepository;
@@ -42,64 +43,13 @@ public class PurchaseService {
                         new ResourceNotFoundException("Buyer not found")
                 );
 
-        if (!"BUYER".equals(buyer.getRole())) {
+        if (!"USER".equals(buyer.getRole()) || !Boolean.TRUE.equals(buyer.getStatus())) {
             throw new BusinessException(
                     "Only buyers can purchase carbon credits"
             );
         }
 
-        CarbonCreditBatch batch =
-                carbonCreditBatchRepository.findById(ccbId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Carbon credit batch not found"
-                                )
-                        );
-
-        if (!"ACTIVE".equals(batch.getStatus())) {
-            throw new BusinessException(
-                    "Carbon credit batch is not active"
-            );
-        }
-
-        if (request.getQuantity() >
-                batch.getAvailableQuantity()) {
-
-            throw new BusinessException(
-                    "Not enough carbon credits available"
-            );
-        }
-
-        Double price =
-                request.getQuantity() * 10.0;
-
-        Purchase purchase = new Purchase();
-
-        purchase.setBuyer(buyer);
-        purchase.setCarbonCreditBatch(batch);
-        purchase.setQuantity(request.getQuantity());
-        purchase.setPrice(price);
-        purchase.setPaymentStatus("COMPLETED");
-        purchase.setPaymentMethod(
-                request.getPaymentMethod()
-        );
-
-        Purchase savedPurchase =
-                purchaseRepository.save(purchase);
-
-        Double remainingQuantity =
-                batch.getAvailableQuantity()
-                        - request.getQuantity();
-
-        batch.setAvailableQuantity(remainingQuantity);
-
-        if (remainingQuantity == 0) {
-            batch.setStatus("SOLD_OUT");
-        }
-
-        carbonCreditBatchRepository.save(batch);
-
-        return mapToResponse(savedPurchase);
+        throw new BusinessException("Purchases are unavailable until pricing, payment processing and settlement rules are configured. No payment has been taken.");
     }
 
     public List<PurchaseResponse> getBuyerPurchases(
@@ -111,7 +61,7 @@ public class PurchaseService {
                         new ResourceNotFoundException("Buyer not found")
                 );
 
-        if (!"BUYER".equals(buyer.getRole())) {
+        if (!"USER".equals(buyer.getRole()) || !Boolean.TRUE.equals(buyer.getStatus())) {
             throw new BusinessException(
                     "Only buyers can view purchase history"
             );
@@ -196,5 +146,7 @@ public class PurchaseService {
         );
 
         return response;
+
+
     }
 }

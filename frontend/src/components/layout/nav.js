@@ -12,8 +12,6 @@ import {
   History,
   Sprout,
   PlusCircle,
-  HeartPulse,
-  FileHeart,
   Stethoscope,
 } from 'lucide-react'
 
@@ -28,7 +26,8 @@ export const NAV_BY_ROLE = {
     {
       label: 'Manage',
       items: [
-        { to: '/admin/users', label: 'Users', icon: Users },
+        { to: '/admin/users', label: 'Users & roles', icon: Users },
+        { to: '/admin/mrv', label: 'MRV assignments', icon: ClipboardList },
         { to: '/admin/projects', label: 'Projects', icon: FolderKanban },
         { to: '/admin/credits', label: 'Carbon credits', icon: Layers },
         { to: '/admin/purchases', label: 'Purchases', icon: ShoppingCart },
@@ -59,7 +58,7 @@ export const NAV_BY_ROLE = {
       ],
     },
   ],
-  BUYER: [
+  USER: [
     {
       items: [{ to: '/buyer', end: true, label: 'Dashboard', icon: LayoutDashboard }],
     },
@@ -72,23 +71,10 @@ export const NAV_BY_ROLE = {
       ],
     },
   ],
-  USER: [
+  HEALTHCARE_ASSISTANT: [
     {
       items: [
-        { to: '/personal-health', end: true, label: 'My health record', icon: HeartPulse },
-      ],
-    },
-    {
-      label: 'Manage',
-      items: [
-        { to: '/personal-health/edit', label: 'Edit record', icon: FileHeart },
-      ],
-    },
-  ],
-  HEALTHCARE_ADVISOR: [
-    {
-      items: [
-        { to: '/health', end: true, label: 'Health records', icon: Stethoscope },
+        { to: '/health', end: true, label: 'Dashboard', icon: Stethoscope },
       ],
     },
   ],
@@ -102,7 +88,6 @@ export const ROLE_ICONS = {
   ADMIN: LayoutDashboard,
   NGO: Sprout,
   VERIFIER: FileCheck2,
-  BUYER: Store,
-  USER: HeartPulse,
-  HEALTHCARE_ADVISOR: Stethoscope,
+  USER: Store,
+  HEALTHCARE_ASSISTANT: Stethoscope,
 }

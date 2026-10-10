@@ -26,10 +26,16 @@ public class User {
     private String email;
     private String phoneNumber;
     private String address;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
     private String role;
 
     private Boolean status;
+    @Column(nullable = false)
+    private Boolean emailVerified = false;
+    @Column(nullable = false)
+    private String accountStatus = "PENDING";
+
 
     private LocalDate dateOfBirth;
 

@@ -1,4 +1,3 @@
-import { getToken } from '../utils/storage'
 
 /**
  * Base URL for the Spring Boot backend.
@@ -18,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-function extractMessage(data, status, fallback) {
+function extractMessage(data, fallback) {
   if (typeof data === 'string' && data) return data
   if (data && typeof data.message === 'string' && data.message) return data.message
   if (data && data.error === 'Validation Failed' && data.errors) {
@@ -45,23 +44,26 @@ async function request(path, options = {}) {
     headers = {},
     auth = true,
     signal,
+    responseType,
   } = options
 
   const finalHeaders = { Accept: 'application/json', ...headers }
-  const token = getToken()
-  if (auth && token) {
-    finalHeaders.Authorization = `Bearer ${token}`
-  }
-  if (body !== undefined) {
-    finalHeaders['Content-Type'] = 'application/json'
+  const isForm = body instanceof FormData
+  if (body !== undefined && !isForm) finalHeaders['Content-Type'] = 'application/json'
+  // Obtain a fresh token so login/logout session rotation never leaves a stale CSRF token.
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrf = await request('/users/csrf', { auth: false, signal })
+    if (!csrf?.token || !csrf?.headerName) throw new ApiError('Could not secure this request. Please try again.')
+    finalHeaders[csrf.headerName] = csrf.token
   }
 
   let response
   try {
     response = await fetch(`${API_BASE}${path}`, {
       method,
+      credentials: 'include',
       headers: finalHeaders,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined,
       signal,
     })
   } catch (error) {
@@ -72,21 +74,20 @@ async function request(path, options = {}) {
     )
   }
 
+  if (response.ok && responseType === 'blob') return response.blob()
   const data = await parseBody(response)
 
   if (!response.ok) {
     const status = response.status
 
-    // This backend returns 403 both for an invalid/expired token and for a
-    // role restriction. Since the UI already gates every route by role, a
-    // 401/403 on an authenticated call means the session is no longer valid.
-    if ((status === 401 || status === 403) && auth && token) {
+    if (status === 401 && auth) {
       window.dispatchEvent(new CustomEvent('carbontrust:session-expired'))
+    } else if (status === 403 && auth && path !== '/users/me') {
+      window.dispatchEvent(new CustomEvent('carbontrust:permissions-changed'))
     }
 
     const message = extractMessage(
       data,
-      status,
       status === 0
         ? 'Network request failed'
         : status === 500

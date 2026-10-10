@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  PackagePlus,
 } from 'lucide-react'
 import PageTransition from '../../components/PageTransition'
 import PageHeader from '../../components/ui/PageHeader'
@@ -24,14 +23,13 @@ import Modal from '../../components/ui/Modal'
 import Tabs from '../../components/ui/Tabs'
 import { StatusBadge } from '../../components/ui/Badge'
 import EmptyState, { ErrorState } from '../../components/ui/EmptyState'
-import { Input } from '../../components/ui/Fields'
 import { SkeletonList } from '../../components/ui/Loaders'
 import { useAsync } from '../../hooks/useAsync'
 import { useToast } from '../../context/ToastContext'
 import { useAuth } from '../../context/AuthContext'
 import { getProject, deleteProject } from '../../api/projects'
-import { listProjectMRV } from '../../api/mrv'
-import { projectCredits, issueCredits } from '../../api/credits'
+import { listProjectMRV, downloadEvidence, mrvVerifications } from '../../api/mrv'
+import { projectCredits } from '../../api/credits'
 import { PROJECT_STATUS, MRV_STATUS, BATCH_STATUS, ecosystemMeta } from '../../utils/status'
 import { formatNumber, formatDate, formatDateTime } from '../../utils/format'
 
@@ -40,6 +38,16 @@ const STATUS_ICON = {
   VERIFIED: ShieldCheck,
   REJECTED: XCircle,
   PENDING: Clock,
+}
+
+function SubmissionHistory({ submission }) {
+  const history = useAsync(useMemo(() => () => mrvVerifications(submission.mrvId), [submission.mrvId]))
+  const [error, setError] = useState(null)
+  return <div className="mt-2">
+    {submission.fileName && <Button size="sm" variant="secondary" onClick={() => downloadEvidence(submission).catch(e => setError(e.message))}>Download {submission.fileName}</Button>}
+    {error && <p role="alert">{error}</p>}
+    {history.loading ? <p>Loading reviews…</p> : history.error ? <p role="alert">{history.error.message}</p> : (history.data || []).map(v => <div key={v.verificationId}><strong>{v.verificationStatus}</strong> · {v.verifierUsername}<p>{v.comments}</p><small>{formatDateTime(v.verificationDate)}</small></div>)}
+  </div>
 }
 
 export default function ProjectDetailPage() {
@@ -54,9 +62,7 @@ export default function ProjectDetailPage() {
 
   const [tab, setTab] = useState('mrv')
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [issueOpen, setIssueOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [issueQty, setIssueQty] = useState('')
 
   const data = project.data
   const loading = project.loading
@@ -73,23 +79,6 @@ export default function ProjectDetailPage() {
       navigate('/ngo/projects')
     } catch (err) {
       toast.error(err?.message || 'Could not delete the project.', 'Delete failed')
-      setBusy(false)
-    }
-  }
-
-  const confirmIssue = async () => {
-    const qty = Number(issueQty)
-    if (!qty || qty <= 0) return
-    setBusy(true)
-    try {
-      await issueCredits(projectId, qty)
-      toast.success(`Issued ${formatNumber(qty)} credits — now live for buyers.`, 'Carbon credits issued')
-      setIssueOpen(false)
-      setIssueQty('')
-      credits.run()
-    } catch (err) {
-      toast.error(err?.message || 'Could not issue credits.', 'Issuance failed')
-    } finally {
       setBusy(false)
     }
   }
@@ -193,9 +182,6 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
               </div>
-              {isVerified && isOwner && (
-                <Button icon={PackagePlus} onClick={() => setIssueOpen(true)}>Issue credits</Button>
-              )}
             </div>
           </Card>
 
@@ -227,6 +213,7 @@ export default function ProjectDetailPage() {
                               {formatDateTime(submission.uploadDate)} · {submission.photoVerification ? 'Photo evidence attached' : 'Desk-based evidence'}
                             </div>
                             {submission.remarks && <div className="text-sm ink-soft mt-2">{submission.remarks}</div>}
+                            <SubmissionHistory submission={submission} />
                           </div>
                         </div>
                         <StatusBadge map={MRV_STATUS} value={submission.mrvStatus} />
@@ -265,8 +252,8 @@ export default function ProjectDetailPage() {
                   <EmptyState
                     icon={Layers}
                     title="No credits issued yet"
-                    description="Your project is verified — issue a carbon credit batch to list it on the buyer marketplace."
-                    action={<Button icon={PackagePlus} onClick={() => setIssueOpen(true)}>Issue credits</Button>}
+                    description="Your project is verified. Administrators manage carbon credit issuance."
+                    action={null}
                   />
                 ) : (
                   <EmptyState
@@ -376,35 +363,10 @@ export default function ProjectDetailPage() {
         }
       >
         <p className="text-sm ink-soft">
-          This permanently removes <strong>{data.projectName}</strong> and its MRV submissions from the registry.
+          This deletes <strong>{data.projectName}</strong> only if no MRV history exists. Projects with evidence are preserved.
         </p>
       </Modal>
 
-      {/* Issue credits modal */}
-      <Modal
-        open={issueOpen}
-        onClose={() => setIssueOpen(false)}
-        title="Issue carbon credit batch"
-        subtitle={`${data.projectName} · 1 credit = 1 tCO₂e`}
-        size="sm"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIssueOpen(false)} disabled={busy}>Cancel</Button>
-            <Button onClick={confirmIssue} loading={busy} icon={Layers}>Issue batch</Button>
-          </>
-        }
-      >
-        <Input
-          label="Credit quantity"
-          type="number"
-          min="1"
-          step="any"
-          value={issueQty}
-          onChange={(event) => setIssueQty(event.target.value)}
-          hint="The batch is listed on the buyer marketplace at $10.00 per credit once issued."
-          placeholder="e.g. 5000"
-        />
-      </Modal>
     </PageTransition>
   )
 }

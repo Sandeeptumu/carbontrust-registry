@@ -1,3 +1,5 @@
+> Historical project reference. The 2026-10-10 request supersedes legacy roles/authentication and undocumented assumptions. See [current requirements coverage](08_REQUIREMENTS_AND_VERIFICATION.md).
+
 #  System Architecture
 
 ## Overview

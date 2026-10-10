@@ -27,7 +27,7 @@ import { useAuth } from '../../context/AuthContext'
 import { adminStats, adminPurchases, adminRetirements } from '../../api/admin'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/format'
 
-const ROLE_COLORS = { ADMIN: '#6d5bd0', NGO: '#0f766e', VERIFIER: '#0e7490', BUYER: '#158a4e' }
+const ROLE_COLORS = { ADMIN: '#6d5bd0', NGO: '#0f766e', VERIFIER: '#0e7490', USER: '#158a4e', HEALTHCARE_ASSISTANT: '#b45309' }
 const STATUS_COLORS = { DRAFT: '#b26a16', VERIFIED: '#158a4e', REJECTED: '#c2412c', PENDING: '#0e7490', SUBMITTED: '#6d5bd0' }
 
 function revenueSeries(purchases) {

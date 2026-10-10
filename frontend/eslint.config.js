@@ -9,7 +9,7 @@ const jsConfigs = js.configs || js.default?.configs || {}
 const reactFlat = react.configs?.flat || {}
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', '.vercel']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

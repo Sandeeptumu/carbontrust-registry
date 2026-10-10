@@ -5,7 +5,11 @@ export function listProjectMRV(projectId) {
 }
 
 export function createMRVSubmission(projectId, payload) {
-  return api.post(`/projects/${projectId}/mrv`, payload)
+  const data = new FormData()
+  data.append("file", payload.file)
+  data.append("remarks", payload.remarks)
+  data.append("photoVerification", String(payload.photoVerification))
+  return api.post(`/projects/${projectId}/mrv`, data)
 }
 
 export function verifierSubmissions(status) {
@@ -18,9 +22,19 @@ export function verifyMRV(mrvId, payload) {
 }
 
 export function mrvVerifications(mrvId) {
-  return api.get(`/verifier/mrv/${mrvId}/verifications`)
+  return api.get(`/mrv/${mrvId}/verifications`)
 }
 
 export function verifierHistory() {
   return api.get('/verifier/verifications')
+}
+
+export async function downloadEvidence(submission) {
+  const blob = await api.get(`/mrv/${submission.mrvId}/evidence`, { responseType: 'blob' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = submission.fileName || 'evidence'
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

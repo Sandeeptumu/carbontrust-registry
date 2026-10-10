@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class VerificationService {
 
     private final VerificationRepository verificationRepository;
@@ -37,30 +38,34 @@ public class VerificationService {
         this.projectRepository = projectRepository;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public VerificationResponse verifyMRV(
             Long mrvId,
             VerificationRequest request,
             String email
     ) {
 
+        if (request.getComments() == null || request.getComments().isBlank() || request.getComments().length() > 2000 || !("APPROVED".equals(request.getVerificationStatus()) || "REJECTED".equals(request.getVerificationStatus()))) throw new BusinessException("A valid decision and comments are required");
         User verifier = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Verifier not found")
                 );
 
-        if (!"VERIFIER".equals(verifier.getRole())) {
+        if (!"VERIFIER".equals(verifier.getRole()) || !Boolean.TRUE.equals(verifier.getStatus())) {
             throw new BusinessException(
                     "Only verifiers can verify MRV submissions"
             );
         }
 
         MRVSubmission mrvSubmission =
-                mrvSubmissionRepository.findById(mrvId)
+                mrvSubmissionRepository.findLockedById(mrvId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "MRV submission not found"
                                 )
                         );
+
+        if (mrvSubmission.getAssignedVerifier() == null || !mrvSubmission.getAssignedVerifier().getUserId().equals(verifier.getUserId())) throw new org.springframework.security.access.AccessDeniedException("This submission is not assigned to you");
 
         if (!"PENDING".equals(mrvSubmission.getMrvStatus())) {
             throw new BusinessException(
@@ -86,7 +91,7 @@ public class VerificationService {
 
         mrvSubmissionRepository.save(mrvSubmission);
 
-        Project project = mrvSubmission.getProject();
+        Project project = projectRepository.findLockedById(mrvSubmission.getProject().getProjectId()).orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         if ("APPROVED".equals(request.getVerificationStatus())) {
             project.setProjectStatus("VERIFIED");
@@ -109,19 +114,11 @@ public class VerificationService {
                         new ResourceNotFoundException("User not found")
                 );
 
-        if (!"VERIFIER".equals(user.getRole()) &&
-                !"ADMIN".equals(user.getRole())) {
-
-            throw new BusinessException(
-                    "Only verifiers or admins can view verification records"
-            );
-        }
-
-        if (!mrvSubmissionRepository.existsById(mrvId)) {
-            throw new ResourceNotFoundException(
-                    "MRV submission not found"
-            );
-        }
+        var submission = mrvSubmissionRepository.findById(mrvId).orElseThrow(() -> new ResourceNotFoundException("MRV submission not found"));
+        boolean allowed = "ADMIN".equals(user.getRole())
+            || ("NGO".equals(user.getRole()) && submission.getProject().getOwner().getUserId().equals(user.getUserId()))
+            || ("VERIFIER".equals(user.getRole()) && submission.getAssignedVerifier() != null && submission.getAssignedVerifier().getUserId().equals(user.getUserId()));
+        if (!Boolean.TRUE.equals(user.getStatus()) || !allowed) throw new org.springframework.security.access.AccessDeniedException("Not authorized to view this review");
 
         return verificationRepository
                 .findByMrvSubmissionMrvId(mrvId)
@@ -141,7 +138,7 @@ public class VerificationService {
                         )
                 );
 
-        if (!"VERIFIER".equals(verifier.getRole())) {
+        if (!"VERIFIER".equals(verifier.getRole()) || !Boolean.TRUE.equals(verifier.getStatus())) {
             throw new BusinessException(
                     "Only verifiers can view verification history"
             );

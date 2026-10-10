@@ -16,12 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.security.Principal;
+import jakarta.validation.Valid;
+import com.carbontrust.backend.dto.AdminRoleUpdateRequest;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
 
     private final AdminService adminService;
+    private final com.carbontrust.backend.repository.AccountAuditRepository audits;
     private final ProjectService projectService;
     private final CarbonCreditBatchService carbonCreditBatchService;
     private final PurchaseService purchaseService;
@@ -32,9 +39,10 @@ public class AdminController {
             ProjectService projectService,
             CarbonCreditBatchService carbonCreditBatchService,
             PurchaseService purchaseService,
-            RetirementService retirementService
+            RetirementService retirementService, com.carbontrust.backend.repository.AccountAuditRepository audits
     ) {
         this.adminService = adminService;
+        this.audits=audits;
         this.projectService = projectService;
         this.carbonCreditBatchService = carbonCreditBatchService;
         this.purchaseService = purchaseService;
@@ -49,6 +57,28 @@ public class AdminController {
     @GetMapping("/users")
     public List<AdminUserResponse> getUsers() {
         return adminService.getAllUsers();
+    }
+
+    @PutMapping("/users/{userId}/role")
+    public AdminUserResponse updateRole(@PathVariable Long userId,
+            @Valid @RequestBody AdminRoleUpdateRequest request, Principal principal) {
+        return adminService.updateRole(userId, request.role(), request.expectedRole(), principal.getName());
+    }
+
+    public record StatusRequest(@jakarta.validation.constraints.NotBlank String status) {}
+    public record EmailRequest(@jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Email @jakarta.validation.constraints.Size(max=254) String email) {}
+    @PutMapping("/users/{userId}/status")
+    public AdminUserResponse status(@PathVariable Long userId,@Valid @RequestBody StatusRequest body,Principal principal) {
+        return adminService.updateStatus(userId,body.status(),principal.getName());
+    }
+    @PutMapping("/users/{userId}/email")
+    public java.util.Map<String,String> email(@PathVariable Long userId,@Valid @RequestBody EmailRequest body,Principal principal) {
+        adminService.requestEmailChange(userId,body.email(),principal.getName());
+        return java.util.Map.of("message","Verification sent. The current address remains until confirmation.");
+    }
+    @GetMapping("/users/{userId}/audit")
+    public java.util.List<com.carbontrust.backend.entity.AccountAudit> audit(@PathVariable Long userId) {
+        return audits.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @GetMapping("/projects")

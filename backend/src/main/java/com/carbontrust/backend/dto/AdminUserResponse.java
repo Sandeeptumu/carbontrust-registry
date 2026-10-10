@@ -21,6 +21,8 @@ public class AdminUserResponse {
     private String address;
     private String role;
     private Boolean status;
+    private String accountStatus;
+    private Boolean emailVerified;
     private LocalDate dateOfBirth;
     private LocalDateTime createdAt;
 }

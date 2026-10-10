@@ -1,17 +1,19 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { PageLoader } from '../ui/Loaders'
+import { ErrorState } from '../ui/EmptyState'
 import { isKnownRole, roleHome } from '../../utils/roles'
 import UnknownRolePage from '../../pages/common/UnknownRolePage'
 
 /** Blocks unauthenticated visitors. */
 export function ProtectedRoute() {
-  const { user, ready } = useAuth()
+  const { user, ready, sessionError, refreshSession } = useAuth()
   const location = useLocation()
 
   if (!ready) {
     return <PageLoader label="Restoring your session…" />
   }
+  if (sessionError && !user) return <ErrorState error={sessionError} onRetry={refreshSession} />
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
