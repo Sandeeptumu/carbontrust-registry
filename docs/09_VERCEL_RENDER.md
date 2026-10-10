@@ -4,7 +4,7 @@ Status (2026-10-10): the production frontend is live at https://carbontrust-regi
 
 ## Login without email verification
 
-At the owner’s request, new registrations now receive active User accounts and can sign in immediately with email and password. Registration does not contact SMTP. Email ownership remains unverified; the database verification flag is not falsified. Administrative role assignment and account suspension remain enforced. Brevo is under review, so the UI reports emailed password recovery as unavailable. Existing PENDING or suspended accounts are not automatically activated. This change must be deployed to both Render and Vercel before relying on the new behavior.
+At the owner’s request, new registrations now receive active User accounts and can sign in immediately with email and password. Registration does not contact SMTP. Email ownership remains unverified; the database verification flag is not falsified. Administrative role assignment and account suspension remain enforced. Brevo is under review, so the UI reports emailed password recovery as unavailable. Existing PENDING or suspended accounts are not automatically activated. Release `e8d725c` is deployed to both Render and Vercel. A temporary account passed live registration (200), login (200), session restoration (200), admin denial (403), logout (200), and session revocation (401) through the public Vercel API. The database confirmed USER / email_verified=0 / ACTIVE. The temporary account and its session/audit records were removed after testing. All 35 backend tests and 8 frontend tests passed, as did frontend lint, type checking, and build.
 
 ## Database and email prerequisites
 
