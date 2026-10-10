@@ -1,6 +1,6 @@
 # Vercel + Render free demo deployment
 
-Status: configuration prepared; no public deployment has been created. Hosted MySQL and a verified email sender still need provisioning. Local Mailpit must not be used for the public application.
+Status (2026-10-10): release branch `codex/registry-email-auth` is pushed. The Vercel project `carbontrust-registry` exists, but no public deployment is live. Aiven Free MySQL 8.4 has passed a connection check with certificate/hostname verification; Flyway V1–V3 and Hibernate validation completed. A dedicated `carbontrust_runtime` account has only SELECT/INSERT/UPDATE/DELETE privileges. Brevo's sender is verified; its SMTP key still needs creation by the account owner. Render service creation and external email/browser verification remain pending. Local Mailpit must not be used for the public application.
 
 ## Database and email prerequisites
 
