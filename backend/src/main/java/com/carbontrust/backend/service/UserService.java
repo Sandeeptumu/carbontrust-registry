@@ -47,6 +47,17 @@ public class UserService {
    throw new BusinessException("Password must contain 12–64 characters and at most 72 UTF-8 bytes");
   if(!password.equals(confirmation)) throw new BusinessException("Passwords do not match");
  }
+ @Transactional public void changePassword(String email, ChangePasswordRequest request) {
+  User u=users.findByEmailForUpdate(normalizeEmail(email)).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+  if(!encoder.matches(request.getCurrentPassword(),u.getPassword()))
+   throw new ExternalAuthException(401,"INVALID_CREDENTIALS","Current password is incorrect");
+  validatePassword(request.getNewPassword(),request.getPasswordConfirmation());
+  if(encoder.matches(request.getNewPassword(),u.getPassword()))
+   throw new BusinessException("Choose a password different from your current password");
+  u.setPassword(encoder.encode(request.getNewPassword()));
+  users.save(u);sessions.deleteByUserUserId(u.getUserId());
+  audit.record(u.getUserId(),u.getEmail(),"PASSWORD_CHANGED","Password changed by the authenticated account; all sessions revoked");
+ }
  @Transactional public UserLoginResponse loginUser(UserLoginRequest request) {
   User u=users.findByEmailForUpdate(normalizeEmail(request.getEmail())).orElse(null);
   boolean valid=encoder.matches(request.getPassword(),u==null || u.getPassword()==null ? dummyHash:u.getPassword());

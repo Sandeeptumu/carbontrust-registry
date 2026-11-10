@@ -42,5 +42,8 @@ public class UserController {
  private Map<String,String> generic() {return Map.of("message","If the account is eligible, an email has been sent.");}
  @PostMapping("/verify-email") public Map<String,String> verify(@Valid @RequestBody TokenRequest body,HttpServletRequest request) {limit(request,null);users.consume(body.token(),null,null,false);return Map.of("message","Email verified. You can now sign in if your account is active.");}
  @PostMapping("/reset-password") public Map<String,String> reset(@Valid @RequestBody ResetRequest body,HttpServletRequest request) {limit(request,null);users.consume(body.token(),body.password(),body.passwordConfirmation(),true);return Map.of("message","Password changed. Sign in with your new password.");}
+ @PutMapping("/me/password") public Map<String,String> changePassword(@Valid @RequestBody ChangePasswordRequest body,Authentication authentication,HttpServletRequest request) {
+  limit(request,null);users.changePassword(authentication.getName(),body);return Map.of("message","Password changed. Please sign in again.");
+ }
  @GetMapping("/me") public CurrentUserResponse me(Authentication a) {return users.getCurrentUser(a.getName());}
 }

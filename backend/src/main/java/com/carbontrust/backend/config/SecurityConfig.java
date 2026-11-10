@@ -28,7 +28,7 @@ public class SecurityConfig {
    .authorizeHttpRequests(a -> a.dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll().requestMatchers("/users/csrf","/users/register","/users/login","/users/logout","/users/forgot-password","/users/resend-verification","/users/reset-password","/users/verify-email").permitAll()
     .requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers(org.springframework.http.HttpMethod.POST,"/projects/*/carbon-credits").hasRole("ADMIN").requestMatchers(org.springframework.http.HttpMethod.GET,"/projects","/projects/**").hasAnyRole("NGO","ADMIN").requestMatchers("/projects/**","/ngo/**").hasRole("NGO")
     .requestMatchers("/verifier/**").hasRole("VERIFIER").requestMatchers("/buyer/**").hasRole("USER").requestMatchers("/marketplace/**").hasRole("USER")
-    .requestMatchers("/users/me","/mrv/**").authenticated().anyRequest().denyAll())
+    .requestMatchers("/users/me","/users/me/**","/mrv/**").authenticated().anyRequest().denyAll())
    .addFilterBefore(sessions,UsernamePasswordAuthenticationFilter.class);
   return http.build();
  }
