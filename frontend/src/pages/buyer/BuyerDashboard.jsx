@@ -24,6 +24,7 @@ import {
 import PageTransition from '../../components/PageTransition'
 import PageHeader from '../../components/ui/PageHeader'
 import StatCard from '../../components/dashboard/StatCard'
+import DashboardBriefing from '../../components/dashboard/DashboardBriefing'
 import ChartTooltip from '../../components/dashboard/ChartTooltip'
 import EmptyState, { ErrorState } from '../../components/ui/EmptyState'
 import Card from '../../components/ui/Card'
@@ -130,18 +131,21 @@ export default function BuyerDashboard() {
           <ErrorState error={error} onRetry={() => { purchases.run(); retirements.run() }} />
         </Card>
       ) : (purchases.data || []).length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={Wallet}
-            title="Your carbon portfolio is empty"
-            description="When you purchase verified credits from the marketplace they'll appear here with full history, portfolio charts and retirement tools."
-            action={
-              <Button to="/buyer/marketplace" icon={ShoppingCart}>
-                Explore the marketplace
-              </Button>
-            }
-          />
-        </Card>
+        <>
+          <Card>
+            <EmptyState
+              icon={Wallet}
+              title="Your carbon portfolio is ready"
+              description="Browse verified projects to start building a portfolio. Purchases, retirement history and impact records will appear here as your activity grows."
+              action={
+                <Button to="/buyer/marketplace" icon={ShoppingCart}>
+                  Explore the marketplace
+                </Button>
+              }
+            />
+          </Card>
+          <DashboardBriefing role="buyer" />
+        </>
       ) : (
         <>
           <div className="grid grid--stats">
@@ -268,6 +272,7 @@ export default function BuyerDashboard() {
               </div>
             </Card>
           </div>
+          <DashboardBriefing role="buyer" />
         </>
       )}
     </PageTransition>

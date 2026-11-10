@@ -14,6 +14,7 @@ import {
 import PageTransition from '../../components/PageTransition'
 import PageHeader from '../../components/ui/PageHeader'
 import StatCard from '../../components/dashboard/StatCard'
+import DashboardBriefing from '../../components/dashboard/DashboardBriefing'
 import ChartTooltip from '../../components/dashboard/ChartTooltip'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -87,18 +88,21 @@ export default function NgoDashboard() {
           <ErrorState error={projects.error} onRetry={projects.run} />
         </Card>
       ) : mine.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={FolderKanban}
-            title="No projects yet"
-            description="Register your first blue carbon restoration project to begin the verification and credit journey."
-            action={
-              <Button to="/ngo/projects/new" icon={PlusCircle}>
-                Create your first project
-              </Button>
-            }
-          />
-        </Card>
+        <>
+          <Card>
+            <EmptyState
+              icon={FolderKanban}
+              title="Your project workspace is ready"
+              description="Register your first blue carbon restoration project, then follow its evidence and verification journey from one place."
+              action={
+                <Button to="/ngo/projects/new" icon={PlusCircle}>
+                  Create your first project
+                </Button>
+              }
+            />
+          </Card>
+          <DashboardBriefing role="ngo" />
+        </>
       ) : (
         <>
           <div className="grid grid--stats">
@@ -199,6 +203,7 @@ export default function NgoDashboard() {
           <div className="mt-4 text-xs muted" style={{ textAlign: 'right' }}>
             Last updated {formatDate(new Date().toISOString())}
           </div>
+          <DashboardBriefing role="ngo" />
         </>
       )}
     </PageTransition>

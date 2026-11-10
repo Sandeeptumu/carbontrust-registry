@@ -17,6 +17,7 @@ import { Users, FolderKanban, Layers, Recycle, DollarSign, ShoppingCart } from '
 import PageTransition from '../../components/PageTransition'
 import PageHeader from '../../components/ui/PageHeader'
 import StatCard from '../../components/dashboard/StatCard'
+import DashboardBriefing from '../../components/dashboard/DashboardBriefing'
 import ChartTooltip from '../../components/dashboard/ChartTooltip'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -277,6 +278,7 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
+          <DashboardBriefing role="admin" />
         </>
       )}
     </PageTransition>
